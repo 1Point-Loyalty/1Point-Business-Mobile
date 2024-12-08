@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "1Point-for-Business",
+    "name": "1Point Business",
     "slug": "1Point-for-Business",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#000000"
     },
     "ios": {
       "supportsTablet": true,
@@ -19,7 +19,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/splash.png",
         "backgroundColor": "#ffffff"
       },
       "package": "ca.one_point.business",
@@ -37,6 +37,12 @@
           "useFrameworks": "static"
         }
       }],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow 1Point Business to access your camera"
+        }
+      ],
       "@react-native-firebase/app",
       "@react-native-firebase/auth"
     ],
