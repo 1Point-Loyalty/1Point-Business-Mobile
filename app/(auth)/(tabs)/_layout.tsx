@@ -4,8 +4,7 @@ import React from 'react';
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { MaterialIcons } from '@expo/vector-icons';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { View, Text, StyleSheet, Image, SafeAreaView } from 'react-native';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -13,54 +12,77 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'dark'].tint,
+        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
+        tabBarShowLabel: false,
         tabBarStyle: {
-          backgroundColor: 'black',
+          position: 'absolute',
+          bottom: 27,
+          left: 16,
+          right: 16,
+          height: 60,
+          elevation: 0,
+          backgroundColor: 'white',
+          borderRadius: 50,
+          alignItems: "center",
+          justifyContent: 'center',
         },
       }}>
-      <Tabs.Screen
+       <Tabs.Screen
         name="home"
         options={{
-          title: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'home' : 'home-outline'} color="white" />
+            <View style={{alignItems: 'center'}}>
+              <TabBarIcon name={focused ? 'home' : 'home-outline'} color="black" size={30}/>
+            </View>
           ),
         }}
       />
       <Tabs.Screen
         name="catalog"
         options={{
-          title: 'Catalog',
           tabBarIcon: ({ color, focused }) => (
-            <MaterialIcons name="local-offer" size={28} color="white" />
+            <View style={{alignItems: 'center'}}>
+              <TabBarIcon name={focused ? 'book' : 'book-outline'} color="black" size={30}/>
+            </View>
           ),
         }}
       />
       <Tabs.Screen
-        name="qr"
+        name="QRScan"
         options={{
-          title: 'QR Code',
           tabBarIcon: ({ color, focused }) => (
-            <MaterialCommunityIcons name="qrcode-scan" size={28} color="white" />
+            <View style={{
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: 66,
+              width: 66,
+              borderRadius: 999,
+              backgroundColor: '#E95F23',
+              marginTop: 30,
+            }}>
+              <TabBarIcon name={focused ? 'qr-code' : 'qr-code-outline'} color="white" size={36} style={{marginBottom: 0}}/>
+            </View>
           ),
         }}
       />
       <Tabs.Screen
         name="transactions"
         options={{
-          title: 'Transactions',
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'receipt' : 'receipt'} color="white" />
+            <View style={{alignItems: 'center'}}>
+              <TabBarIcon name={focused ? 'list' : 'list-outline'} color="black" size={30}/>
+            </View>
           ),
         }}
       />
       <Tabs.Screen
-        name="settings"
+        name="profile"
         options={{
-          title: 'Settings',
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'settings' : 'settings'} color="white" />
+            <View style={{alignItems: 'center'}}>
+              <TabBarIcon name={focused ? 'person' : 'person-outline'} color="black" size={30}/>
+            </View>
           ),
         }}
       />

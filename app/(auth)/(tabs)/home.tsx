@@ -1,72 +1,66 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Image, SafeAreaView, Button } from 'react-native';
+import { View, Text, StyleSheet, Image, SafeAreaView } from 'react-native';
 import PagerView from 'react-native-pager-view';
-import auth from '@react-native-firebase/auth';
 
 export default function HomeScreen() {
 
-  // Array of pages to display
-  const pages = [
+  // Array of elements to display
+  const sliderElements = [
     {
       key: '1',
       imageUri: 'https://pbs.twimg.com/profile_images/1715769848838381568/5ZjyeyH-_400x400.jpg',
-      text: 'Shawerma Plus has joined 1Point!',
+      text: 'Welcome to 1Point, Shawerma Plus!',
     },
     {
       key: '2',
       imageUri: 'https://pbs.twimg.com/profile_images/1008734359816269829/FiJnG7zn_400x400.jpg',
-      text: 'Williams Fresh Cafe has joined 1Point!',
-    },
-    {
-      key: '3',
-      imageUri: 'https://play-lh.googleusercontent.com/Ej7CgScjyiwHdjKHQ0YBgFKbCm73kQUAi0LSiOZO4EKwu_nI7kVD3a8DAqk4evkIYn8',
-      text: "Tahini's has joined 1Point!",
+      text: 'Your last payment of $12.50 was received!',
     },
   ];
 
   const [currentPage, setCurrentPage] = useState(0);  // Track the current page
   const pagerRef = useRef<PagerView>(null); // Reference to the pager view
-  const totalPages = pages.length; // Total number of pages
+  const totalElements = sliderElements.length; // Total number of elements
 
-  // Auto-scroll every 4 seconds to the next page in the list of pages 
+  // Auto-scroll every 4 seconds to the next page in the list of elemtents 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentPage(prevPage => {
+      setCurrentPage(prevElement => {
         // Calculate the next page to display 
-        const nextPage = (prevPage + 1) % totalPages;
+        const nextElement = (prevElement + 1) % totalElements;
         // If the pagerRef is available, set the page to the next page
         if (pagerRef.current) {
-          pagerRef.current.setPage(nextPage);
+          pagerRef.current.setPage(nextElement);
         }
         // Return the next page
-        return nextPage;
+        return nextElement;
       });
     }, 4000);
 
     return () => clearInterval(interval);
   }, []);
 
-  // Render the NEW section pages
-  const renderPages = () => {
+  // Render the NEW section elements
+  const renderSlider = () => {
     return (
-      // Use the PagerView component to display the pages 
+      // Use the PagerView component to display the elements 
       <PagerView
-        style={styles.page}
+        style={styles.sliderContainer}
         initialPage={0}
         ref={pagerRef}
         onPageSelected={(e) => setCurrentPage(e.nativeEvent.position)}>
 
-        {pages.map(page => (
-          <View style={styles.newSection} key={page.key}>
-            {page.imageUri ? (
-              <Image source={{ uri: page.imageUri }} style={styles.newBrandLogo} />
+        {sliderElements.map(element => (
+          <View style={[styles.sliderSection, styles.shadowProp]} key={element.key}>
+            {element.imageUri ? (
+              <Image source={{ uri: element.imageUri }} style={styles.sliderLogoContainer} />
             ) : null}
-            {page.imageUri ? (
+            {element.imageUri ? (
               <View style={styles.newLabelContainer}>
                 <Text style={styles.newLabel}>NEW</Text>
               </View>
             ) : null}
-            <Text style={styles.newText}>{page.text}</Text>
+            <Text style={styles.newText}>{element.text}</Text>
           </View>
         ))}
 
@@ -79,7 +73,7 @@ export default function HomeScreen() {
   const renderPageDots = () => {
     return (
       <View style={styles.dotsContainer}>
-        {pages.map((_, index) => (
+        {sliderElements.map((_, index) => (
           <View
             key={index}
             style={[
@@ -97,45 +91,60 @@ export default function HomeScreen() {
   const renderPointsSection = () => {
     return (
       <View style={styles.pointsSection}>
-
-        <View style={styles.row}>
-
-          <Text style={styles.label}>Current Point Balance:</Text>
-
+      <View>
+      <View style={[styles.row, styles.shadowProp]}>
+      <Text style={styles.subHeading2Text}>Points Collected</Text>
           <View style={styles.pointContainer}>
-
             <Image
               source={require('@/assets/images/1Point_Logo.png')}
               style={styles.pointAmounts}
             />
-            <Text style={styles.pointText}>1,978</Text>
-
+            <Text style={styles.pointText}>1978</Text>
           </View>
-
+          <View style={styles.backLabelContainerUp}>
+                <Text style={styles.backLabel}>+48% - Last Month</Text>
+              </View>
         </View>
 
-        <View style={styles.row}>
-
-          <Text style={styles.label}>Total Points Collected:</Text>
-
+        <View style={[styles.row, styles.shadowProp]}>
+        <Text style={styles.subHeading2Text}>Average Revenue</Text>
           <View style={styles.pointContainer}>
+            <Text style={styles.pointText}>$48.69</Text>
+          </View>
+          <View style={styles.backLabelContainerUp}>
+                <Text style={styles.backLabel}>+107% - Last Month</Text>
+              </View>
+        </View>
+        </View>
 
+
+        <View>
+        <View style={[styles.row, styles.shadowProp]}>
+        <Text style={styles.subHeading2Text}>Points Issued</Text>
+          <View style={styles.pointContainer}>
             <Image
               source={require('@/assets/images/1Point_Logo.png')}
               style={styles.pointAmounts}
             />
-            <Text style={styles.pointText}>34,909</Text>
+            <Text style={styles.pointText}>2256</Text>
+          </View>
+          <View style={styles.backLabelContainerUp}>
+                <Text style={styles.backLabel}>+26% - Last Month</Text>
+              </View>
+        </View>
 
+        <View style={[styles.row, styles.shadowProp]}>
+        <Text style={styles.subHeading2Text}>Net # Customers</Text>
+          <View style={styles.pointContainer}>
+            <Text style={styles.pointText}>340</Text>
           </View>
 
+          <View style={styles.backLabelContainerDown}>
+                <Text style={styles.backLabelWhite}>-12% - Last Month</Text>
+              </View>
         </View>
-
-        <View style={styles.row}>
-
-          <Text style={styles.label}>Last Transaction:</Text>
-          <Text style={styles.transactionText}>July 7th, 2024</Text>
-
         </View>
+        
 
       </View>
     );
@@ -145,9 +154,9 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.main}>
 
-      <View style={styles.container}>
+      <View style={styles.mainContainer}>
 
-        <View style={styles.header}>
+        <View style={styles.headerContainer}>
           <Image
             source={require('@/assets/images/1Point_Logo.png')}
             style={styles.headerImage}
@@ -155,19 +164,22 @@ export default function HomeScreen() {
           <View style={styles.headerText}>
             <Text style={styles.welcomeText}>Welcome John!</Text>
           </View>
-          <View style={styles.headerText}>
-            <Button title="Sign out" onPress={()=>auth().signOut()}></Button>
-          </View>
         </View>
 
-        {renderPages()}
-        {renderPageDots()}
+        <Text style={styles.subHeadingText}>LATEST UPDATES</Text>
 
-      </View>
+        {renderSlider()}
 
-      <View style={styles.lower}>
+        <Text style={styles.subHeadingText}>SUMMARY AND INSIGHTS</Text>
+
+
+      <View>
         {renderPointsSection()}
       </View>
+
+      </View>
+
+      
 
     </SafeAreaView >
   );
@@ -175,48 +187,33 @@ export default function HomeScreen() {
 
 
 const styles = StyleSheet.create({
+  //-------------- Main App styling -----------------
   main: {
     flex: 1,
     paddingTop: 15,
-    backgroundColor: '#fff',
+    backgroundColor: '#F1F1F1',
   },
-  container: {
+  mainContainer: {
     flex: 1,
     padding: 15,
-    paddingTop: 40,
-    backgroundColor: '#fff',
+    backgroundColor: '#F1F1F1',
   },
+  
+    //-------------- Header styling -----------------
+  
   headerText: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 71,
   },
-  lower: {
-    flex: 1,
-    paddingTop: 200,
-    borderRadius: 32,
-    backgroundColor: '#ggg',
-    justifyContent: 'flex-end',
-  },
-  header: {
+
+  headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+
   },
-  welcomeText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  newSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#eee',
-    padding: 10,
-    borderRadius: 32,
-    margin: 5,
-    position: 'relative',
-  },
+
   headerImage: {
     width: 71,
     height: 71,
@@ -224,65 +221,144 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  pointAmounts: {
-    width: 46,
-    height: 46,
-    marginRight: 10,
+
+  welcomeText: {
+    fontSize: 26,
+    fontWeight: 'bold',
   },
-  newBrandLogo: {
+
+  subHeadingText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'gray',
+    fontVariant: ['small-caps'],
+    padding: 10,
+  },
+
+  subHeading2Text: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'gray',
+    fontVariant: ['small-caps'],
+  },
+
+  //-------------- Slider styling -----------------
+
+  sliderSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#000',
+    padding: 10,
+    borderRadius: 26,
+    margin: 5,
+    position: 'relative',
+    height: 150,
+  },
+  
+  sliderLogoContainer: {
     width: 120,
     height: 120,
-    marginRight: 10,
     borderRadius: 10,
-    margin: 5,
   },
+
+  sliderContainer: {
+    flex: 0.9,
+    backgroundColor: '#f1f1f1',
+    maxHeight: 200,
+  },
+
+  //-------------- New Icon styling -----------------
+
   newLabelContainer: {
     position: 'absolute',
     top: 10,
     right: 10,
-    backgroundColor: 'black',
-    borderRadius: 32,
+    backgroundColor: 'white',
+    borderRadius: 26,
   },
+
+  backLabelContainerUp: {
+    backgroundColor: '#4BB543',
+    borderRadius: 26,
+  },
+
+  backLabelContainerDown: {
+    backgroundColor: '#ff4545',
+    borderRadius: 26,
+  },
+
   newLabel: {
-    color: 'white',
+    color: 'black',
     paddingHorizontal: 10,
     paddingVertical: 5,
   },
+
+  backLabel: {
+    color: 'black',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    fontSize: 11,
+  },
+
+  backLabelWhite: {
+    color: 'white',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    fontSize: 11,
+  },
+
   newText: {
     fontSize: 20,
     marginLeft: 10,
-    fontWeight: 'bold',
     flexShrink: 1,
+    color: 'white',
   },
+
+//-------------- Point Section styling -----------------
+
   pointsSection: {
-    backgroundColor: '#f5f5f5',
-    padding: 15,
-    paddingBottom: 50,
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: '#fff',
-    padding: 15,
+    backgroundColor: '#F1F1F1',
+    padding: "1%",
     borderRadius: 32,
-    alignItems: 'center',
-    marginBottom: 10,
-    marginVertical: 24,
-    minHeight: 75
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
   },
+
+  pointAmounts: {
+    width: 46,
+    height: 46,
+  },
+
+  row: {
+    justifyContent: 'space-evenly',
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    alignItems: 'center',
+    marginHorizontal: "5%",
+    marginBottom: 10,
+    marginVertical: "5%",
+    minHeight: 150,
+    minWidth: '30%',
+  },
+
+  shadowProp: {
+    shadowColor: '#171717',
+    shadowOffset: {width: -2, height: 4},
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+  },
+
   pointContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   pointText: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 30,
+    color: 'black',
   },
   label: {
     fontSize: 16,
-    fontWeight: 'bold'
+    fontWeight: 'bold',
   },
   transactionRow: {
     flexDirection: 'row',
@@ -293,13 +369,10 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
   },
-  page: {
-    flex: 1,
-    padding: 15,
-    paddingTop: 40,
-    backgroundColor: '#fff',
-    maxHeight: 200,
-  },
+  
+
+//-------------- Dots styling -----------------
+
   dotsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
