@@ -39,7 +39,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="catalog"
         options={{
           tabBarIcon: ({ color, focused }) => (
             <View style={{alignItems: 'center'}}>
