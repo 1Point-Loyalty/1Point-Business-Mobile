@@ -1,25 +1,32 @@
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Image, SafeAreaView } from 'react-native';
-import PagerView from 'react-native-pager-view';
+import { View, Text, StyleSheet, Image, SafeAreaView, useColorScheme } from 'react-native';
+import PagerThemedView from 'react-native-pager-view';
+import { DarkTheme } from '@react-navigation/native';
+import { DefaultTheme } from '@react-navigation/native';
+import { useTheme } from '@/constants/ThemeCheck';
 
 export default function HomeScreen() {
+
+  const theme = useTheme();
 
   // Array of elements to display
   const sliderElements = [
     {
       key: '1',
       imageUri: 'https://pbs.twimg.com/profile_images/1715769848838381568/5ZjyeyH-_400x400.jpg',
-      text: 'Welcome to 1Point, Shawerma Plus!',
+      ThemedText: 'Welcome to 1Point, Shawerma Plus!',
     },
     {
       key: '2',
       imageUri: 'https://pbs.twimg.com/profile_images/1008734359816269829/FiJnG7zn_400x400.jpg',
-      text: 'Your last payment of $12.50 was received!',
+      ThemedText: 'Your last payment of $12.50 was received!',
     },
   ];
 
   const [currentPage, setCurrentPage] = useState(0);  // Track the current page
-  const pagerRef = useRef<PagerView>(null); // Reference to the pager view
+  const pagerRef = useRef<PagerThemedView>(null); // Reference to the pager ThemedView
   const totalElements = sliderElements.length; // Total number of elements
 
   // Auto-scroll every 4 seconds to the next page in the list of elemtents 
@@ -43,28 +50,28 @@ export default function HomeScreen() {
   // Render the NEW section elements
   const renderSlider = () => {
     return (
-      // Use the PagerView component to display the elements 
-      <PagerView
-        style={styles.sliderContainer}
+      // Use the PagerThemedView component to display the elements 
+      <PagerThemedView
+        style={[styles.sliderContainer, {backgroundColor: theme.colors.background}]}
         initialPage={0}
         ref={pagerRef}
         onPageSelected={(e) => setCurrentPage(e.nativeEvent.position)}>
 
         {sliderElements.map(element => (
-          <View style={[styles.sliderSection, styles.shadowProp]} key={element.key}>
+          <ThemedView style={[styles.sliderSection, styles.shadowProp, {backgroundColor: theme.colors.card}]} key={element.key}>
             {element.imageUri ? (
               <Image source={{ uri: element.imageUri }} style={styles.sliderLogoContainer} />
             ) : null}
             {element.imageUri ? (
-              <View style={styles.newLabelContainer}>
-                <Text style={styles.newLabel}>NEW</Text>
-              </View>
+              <ThemedView style={styles.newLabelContainer}>
+                <ThemedText style={styles.newLabel}>NEW</ThemedText>
+              </ThemedView>
             ) : null}
-            <Text style={styles.newText}>{element.text}</Text>
-          </View>
+            <ThemedText style={[styles.newText, {color: theme.colors.text}]}>{element.ThemedText}</ThemedText>
+          </ThemedView>
         ))}
 
-      </PagerView>
+      </PagerThemedView>
     );
   };
 
@@ -72,9 +79,9 @@ export default function HomeScreen() {
   // Render the dots to indicate the current page
   const renderPageDots = () => {
     return (
-      <View style={styles.dotsContainer}>
+      <ThemedView style={styles.dotsContainer}>
         {sliderElements.map((_, index) => (
-          <View
+          <ThemedView
             key={index}
             style={[
               styles.dot,
@@ -82,7 +89,7 @@ export default function HomeScreen() {
             ]}
           />
         ))}
-      </View>
+      </ThemedView>
     );
   };
 
@@ -90,94 +97,94 @@ export default function HomeScreen() {
   // Render the points section
   const renderPointsSection = () => {
     return (
-      <View style={styles.pointsSection}>
-      <View>
-      <View style={[styles.row, styles.shadowProp]}>
-      <Text style={styles.subHeading2Text}>Points Collected</Text>
-          <View style={styles.pointContainer}>
+      <ThemedView style={[styles.pointsSection, {backgroundColor: theme.colors.background}]}>
+      <ThemedView style={{backgroundColor: theme.colors.background}}>
+        <ThemedView style={[styles.row, styles.shadowProp, {backgroundColor: theme.colors.card}]}>
+        <ThemedText style={styles.subHeading2Text}>Points Collected</ThemedText>
+            <ThemedView style={[styles.pointContainer, {backgroundColor: theme.colors.card}]}>
+              <Image
+                source={require('@/assets/images/1Point_Logo.png')}
+                style={styles.pointAmounts}
+              />
+              <ThemedText style={[styles.pointText, {color: theme.colors.text}]}>1978</ThemedText>
+            </ThemedView>
+            <ThemedView style={styles.backLabelContainerUp}>
+                  <ThemedText style={styles.backLabel}>+48% - Last Month</ThemedText>
+                </ThemedView>
+          </ThemedView>
+
+          <ThemedView style={[styles.row, styles.shadowProp, {backgroundColor: theme.colors.card}]}>
+          <ThemedText style={styles.subHeading2Text}>Average Revenue</ThemedText>
+            <ThemedView style={[styles.pointContainer, {backgroundColor: theme.colors.card}]}>
+              <ThemedText style={[styles.pointText, {color: theme.colors.text}]}>$48.69</ThemedText>
+            </ThemedView>
+            <ThemedView style={styles.backLabelContainerUp}>
+                  <ThemedText style={styles.backLabel}>+107% - Last Month</ThemedText>
+                </ThemedView>
+          </ThemedView>
+        </ThemedView>
+
+
+        <ThemedView style={{backgroundColor: theme.colors.background}}>
+        <ThemedView style={[styles.row, styles.shadowProp, {backgroundColor: theme.colors.card}]}>
+        <ThemedText style={styles.subHeading2Text}>Points Issued</ThemedText>
+          <ThemedView style={[styles.pointContainer, {backgroundColor: theme.colors.card}]}>
             <Image
               source={require('@/assets/images/1Point_Logo.png')}
               style={styles.pointAmounts}
             />
-            <Text style={styles.pointText}>1978</Text>
-          </View>
-          <View style={styles.backLabelContainerUp}>
-                <Text style={styles.backLabel}>+48% - Last Month</Text>
-              </View>
-        </View>
+            <ThemedText style={[styles.pointText, {color: theme.colors.text}]}>2256</ThemedText>
+          </ThemedView>
+          <ThemedView style={styles.backLabelContainerUp}>
+                <ThemedText style={styles.backLabel}>+26% - Last Month</ThemedText>
+              </ThemedView>
+        </ThemedView>
 
-        <View style={[styles.row, styles.shadowProp]}>
-        <Text style={styles.subHeading2Text}>Average Revenue</Text>
-          <View style={styles.pointContainer}>
-            <Text style={styles.pointText}>$48.69</Text>
-          </View>
-          <View style={styles.backLabelContainerUp}>
-                <Text style={styles.backLabel}>+107% - Last Month</Text>
-              </View>
-        </View>
-        </View>
+        <ThemedView style={[styles.row, styles.shadowProp, {backgroundColor: theme.colors.card}]}>
+        <ThemedText style={styles.subHeading2Text}>Net # Customers</ThemedText>
+          <ThemedView style={[styles.pointContainer, {backgroundColor: theme.colors.card}]}>
+            <ThemedText style={[styles.pointText, {color: theme.colors.text}]}>340</ThemedText>
+          </ThemedView>
 
-
-        <View>
-        <View style={[styles.row, styles.shadowProp]}>
-        <Text style={styles.subHeading2Text}>Points Issued</Text>
-          <View style={styles.pointContainer}>
-            <Image
-              source={require('@/assets/images/1Point_Logo.png')}
-              style={styles.pointAmounts}
-            />
-            <Text style={styles.pointText}>2256</Text>
-          </View>
-          <View style={styles.backLabelContainerUp}>
-                <Text style={styles.backLabel}>+26% - Last Month</Text>
-              </View>
-        </View>
-
-        <View style={[styles.row, styles.shadowProp]}>
-        <Text style={styles.subHeading2Text}>Net # Customers</Text>
-          <View style={styles.pointContainer}>
-            <Text style={styles.pointText}>340</Text>
-          </View>
-
-          <View style={styles.backLabelContainerDown}>
-                <Text style={styles.backLabelWhite}>-12% - Last Month</Text>
-              </View>
-        </View>
-        </View>
+          <ThemedView style={styles.backLabelContainerDown}>
+                <ThemedText style={styles.backLabelWhite}>-12% - Last Month</ThemedText>
+              </ThemedView>
+        </ThemedView>
+        </ThemedView>
         
 
-      </View>
+      </ThemedView>
     );
   };
 
   // Render the home screen 
   return (
-    <SafeAreaView style={styles.main}>
+    <SafeAreaView style={[styles.main, {backgroundColor: theme.colors.background}]}>
 
-      <View style={styles.mainContainer}>
+      <ThemedView style={[styles.mainContainer, {backgroundColor: theme.colors.background}]}>
 
-        <View style={styles.headerContainer}>
+        <ThemedView style={[styles.headerContainer, {backgroundColor: theme.colors.background}]}>
           <Image
             source={require('@/assets/images/1Point_Logo.png')}
             style={styles.headerImage}
           />
-          <View style={styles.headerText}>
-            <Text style={styles.welcomeText}>Welcome John!</Text>
-          </View>
-        </View>
+          <ThemedView style={[styles.headerText, {backgroundColor: theme.colors.background}]}>
+            <ThemedText style={[styles.welcomeText]}>Welcome John!</ThemedText>
+          </ThemedView>
+        </ThemedView>
 
-        <Text style={styles.subHeadingText}>LATEST UPDATES</Text>
+        <ThemedText style={styles.subHeadingText}>LATEST UPDATES</ThemedText>
 
         {renderSlider()}
 
-        <Text style={styles.subHeadingText}>SUMMARY AND INSIGHTS</Text>
+        <ThemedText style={styles.subHeadingText}>SUMMARY AND INSIGHTS</ThemedText>
 
 
-      <View>
+      <ThemedView>
         {renderPointsSection()}
-      </View>
+      </ThemedView>
 
-      </View>
+      </ThemedView>
 
       
 
@@ -185,18 +192,15 @@ export default function HomeScreen() {
   );
 };
 
-
 const styles = StyleSheet.create({
   //-------------- Main App styling -----------------
   main: {
     flex: 1,
     paddingTop: 15,
-    backgroundColor: '#F1F1F1',
   },
   mainContainer: {
     flex: 1,
     padding: 15,
-    backgroundColor: '#F1F1F1',
   },
   
     //-------------- Header styling -----------------
@@ -211,7 +215,6 @@ const styles = StyleSheet.create({
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-
   },
 
   headerImage: {
@@ -247,7 +250,6 @@ const styles = StyleSheet.create({
   sliderSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#000',
     padding: 10,
     borderRadius: 26,
     margin: 5,
@@ -263,7 +265,6 @@ const styles = StyleSheet.create({
 
   sliderContainer: {
     flex: 0.9,
-    backgroundColor: '#f1f1f1',
     maxHeight: 200,
   },
 
@@ -317,9 +318,7 @@ const styles = StyleSheet.create({
 //-------------- Point Section styling -----------------
 
   pointsSection: {
-    backgroundColor: '#F1F1F1',
     padding: "1%",
-    borderRadius: 32,
     flexDirection: 'row',
     justifyContent: 'space-evenly',
   },
@@ -331,7 +330,6 @@ const styles = StyleSheet.create({
 
   row: {
     justifyContent: 'space-evenly',
-    backgroundColor: '#ffffff',
     borderRadius: 16,
     alignItems: 'center',
     marginHorizontal: "5%",
@@ -354,7 +352,7 @@ const styles = StyleSheet.create({
   },
   pointText: {
     fontSize: 30,
-    color: 'black',
+    paddingTop: 10,
   },
   label: {
     fontSize: 16,
