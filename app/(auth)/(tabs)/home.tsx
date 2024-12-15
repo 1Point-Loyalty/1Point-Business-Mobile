@@ -3,8 +3,6 @@ import { ThemedView } from '@/components/ThemedView';
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Image, SafeAreaView, useColorScheme } from 'react-native';
 import PagerThemedView from 'react-native-pager-view';
-import { DarkTheme } from '@react-navigation/native';
-import { DefaultTheme } from '@react-navigation/native';
 import { useTheme } from '@/constants/ThemeCheck';
 
 export default function HomeScreen() {

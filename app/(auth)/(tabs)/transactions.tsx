@@ -1,102 +1,308 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { StyleSheet, Image, Platform } from 'react-native';
-
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, Image, SafeAreaView, useColorScheme, ScrollView } from 'react-native';
+import PagerThemedView from 'react-native-pager-view';
+import { DarkTheme } from '@react-navigation/native';
+import { DefaultTheme } from '@react-navigation/native';
+import { useTheme } from '@/constants/ThemeCheck';
+import { TransactionRow } from '@/components/ReuseableComponents/TransactionRow';
 
-export default function TabTwoScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={<Ionicons size={310} name="code-slash" style={styles.headerImage} />}>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Transaction</ThemedText>
+export default function HomeScreen() {
+
+  const theme = useTheme();
+
+  const transactionArray = [
+    {
+      transactionAmount: 14000,
+      transactionLocation: "Shawerma Plus",
+      transactionDate: "12/12/2021",
+      transactionCustomerId: '123456789',
+      transactionStatus: "Pending",
+    },
+    {
+      transactionAmount: 4000,
+      transactionLocation: "Shawerma Plus",
+      transactionDate: "12/12/2021",
+      transactionCustomerId: '123456789',
+      transactionStatus: "Pending",
+    },
+    {
+      transactionAmount: 12000,
+      transactionLocation: "Shawerma Plus",
+      transactionDate: "12/12/2021",
+      transactionCustomerId: '123456789',
+      transactionStatus: "Complete",
+    },
+    {
+      transactionAmount: 1000,
+      transactionLocation: "Shawerma Plus",
+      transactionDate: "12/12/2021",
+      transactionCustomerId: '123456789',
+      transactionStatus: "Complete",
+    },
+    {
+      transactionAmount: 150000,
+      transactionLocation: "Shawerma Plus",
+      transactionDate: "12/12/2021",
+      transactionCustomerId: '123456789',
+      transactionStatus: "Complete",
+    },
+  ]
+
+    // Render the transactions section
+    const renderTransactionPreview = () => {
+      return (
+        <ThemedView style={[styles.transactionSection, {backgroundColor: theme.colors.background}]}>
+        <ThemedView style={{backgroundColor: theme.colors.background}}>
+        <ThemedView style={[styles.row, styles.shadowProp, {backgroundColor: theme.colors.card}]}>
+        <ThemedText style={styles.subHeading2Text}>Total # Collected</ThemedText>
+            <ThemedView style={[styles.transactionContainer, {backgroundColor: theme.colors.card}]}>
+              <Image
+                source={require('@/assets/images/1Point_Logo.png')}
+                style={styles.pointAmounts}
+              />
+              <ThemedText style={[styles.transactionPreviewText, {color: theme.colors.text}]}>120</ThemedText>
+            </ThemedView>
+            <ThemedView style={styles.backLabelContainerUp}>
+                  <ThemedText style={styles.backLabel}>+8% - Last Month</ThemedText>
+                </ThemedView>
+          </ThemedView>
+
+
+        </ThemedView>
+
+        <ThemedView style={{backgroundColor: theme.colors.background}}>
+        <ThemedView style={[styles.row, styles.shadowProp, {backgroundColor: theme.colors.card}]}>
+        <ThemedText style={styles.subHeading2Text}>    Total # Issued  </ThemedText>
+            <ThemedView style={[styles.transactionContainer, {backgroundColor: theme.colors.card}]}>
+              <Image
+                source={require('@/assets/images/1Point_Logo.png')}
+                style={styles.pointAmounts}
+              />
+              <ThemedText style={[styles.transactionPreviewText, {color: theme.colors.text}]}>178</ThemedText>
+            </ThemedView>
+            <ThemedView style={styles.backLabelContainerUp}>
+                  <ThemedText style={styles.backLabel}>+2% - Last Month</ThemedText>
+                </ThemedView>
+          </ThemedView>
+
+
+        </ThemedView>
+          
+  
+        </ThemedView>
+      );
+    };
+
+    const mapTransactions = () => {
+      return (
+        <ThemedView>
+          {transactionArray.map((transaction) => {
+            return (
+              <TransactionRow transactionAmount={transaction.transactionAmount} transactionLocation={transaction.transactionLocation} transactionDate={transaction.transactionDate} transactionCustomerId={transaction.transactionCustomerId} transactionStatus={transaction.transactionStatus}/>
+            );
+          })}
+        </ThemedView>
+      );
+    }
+
+  // Render the transactions section
+  const renderTransactions = () => {
+    return (
+      <ThemedView style={{paddingBottom: 120, backgroundColor: theme.colors.background}}>
+       {mapTransactions()}
       </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image source={require('@/assets/images/react-logo.png')} style={{ alignSelf: 'center' }} />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Custom fonts">
-        <ThemedText>
-          Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load{' '}
-          <ThemedText style={{ fontFamily: 'SpaceMono' }}>
-            custom fonts such as this one.
-          </ThemedText>
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user's current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful <ThemedText type="defaultSemiBold">react-native-reanimated</ThemedText> library
-          to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    );
+  };
+
+  // Render the home screen 
+  return (
+    <SafeAreaView style={[styles.main, {backgroundColor: theme.colors.background}]}>
+      <ScrollView style={[styles.mainContainer, {backgroundColor: theme.colors.background}]}>
+
+        <ThemedView style={[styles.headerContainer, {backgroundColor: theme.colors.background}]}>
+          <Image
+            source={require('@/assets/images/1Point_Logo.png')}
+            style={styles.headerImage}
+          />
+          <ThemedView style={[styles.headerText, {backgroundColor: theme.colors.background}]}>
+            <ThemedText style={[styles.welcomeText]}>TRANSACTIONS</ThemedText>
+          </ThemedView>
+        </ThemedView>
+        <ThemedText style={styles.subHeadingText}>TRANSACTION PREVIEW</ThemedText>
+        <ThemedView>
+          {renderTransactionPreview()}
+          </ThemedView>
+
+        <ThemedText style={styles.subHeadingText}>TRANSACTION LIST</ThemedText>
+
+
+      <ThemedView>
+        {renderTransactions()}
+      </ThemedView>
+      
+
+      </ScrollView>
+
+    </SafeAreaView >
   );
-}
+};
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  //-------------- Main App styling -----------------
+  main: {
+    flex: 1,
+    paddingTop: 15,
   },
-  titleContainer: {
+  mainContainer: {
+    flex: 1,
+    padding: 15,
+  },
+  
+  //-------------- Header styling -----------------
+  
+  headerText: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 71,
+  },
+
+  headerContainer: {
     flexDirection: 'row',
-    gap: 8,
+    alignItems: 'center',
   },
+
+  headerImage: {
+    width: 71,
+    height: 71,
+    marginRight: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  welcomeText: {
+    fontSize: 26,
+    fontWeight: 'bold',
+  },
+
+  subHeadingText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'gray',
+    fontVariant: ['small-caps'],
+    padding: 10,
+  },
+
+  subHeading2Text: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'gray',
+    fontVariant: ['small-caps'],
+  },
+
+  //-------------- Slider styling -----------------
+
+  sliderSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    borderRadius: 26,
+    margin: 5,
+    position: 'relative',
+    height: 150,
+  },
+  
+  sliderLogoContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 10,
+  },
+
+  sliderContainer: {
+    flex: 0.9,
+    maxHeight: 200,
+  },
+
+  //-------------- Back styling -----------------
+
+  backLabelContainerUp: {
+    backgroundColor: '#4BB543',
+    borderRadius: 26,
+  },
+
+  backLabelContainerDown: {
+    backgroundColor: '#ff4545',
+    borderRadius: 26,
+  },
+
+  backLabel: {
+    color: 'black',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    fontSize: 11,
+  },
+
+  backLabelWhite: {
+    color: 'white',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    fontSize: 11,
+  },
+
+
+//-------------- Transaction Preview Section styling -----------------
+
+  transactionSection: {
+    padding: "1%",
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+  },
+
+  pointAmounts: {
+    width: 46,
+    height: 46,
+  },
+
+  row: {
+    justifyContent: 'space-evenly',
+    borderRadius: 16,
+    alignItems: 'center',
+    marginHorizontal: "5%",
+    marginBottom: 10,
+    marginVertical: "5%",
+    minHeight: 150,
+    minWidth: '30%',
+  },
+
+  shadowProp: {
+    shadowColor: '#171717',
+    shadowOffset: {width: -2, height: 4},
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+  },
+
+  transactionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  transactionPreviewText: {
+    fontSize: 30,
+    paddingTop: 10,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  transactionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  transactionText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  
 });
