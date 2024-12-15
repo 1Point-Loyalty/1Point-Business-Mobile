@@ -157,31 +157,32 @@ export default function HomeScreen() {
 
   // Render the home screen 
   return (
-    <SafeAreaView style={[styles.main, {backgroundColor: theme.colors.background}]}>
+    <SafeAreaView style={[styles.main, {backgroundColor: theme.colors.card}]}>
 
-      <ThemedView style={[styles.mainContainer, {backgroundColor: theme.colors.background}]}>
-
-        <ThemedView style={[styles.headerContainer, {backgroundColor: theme.colors.background}]}>
+<ThemedView style={[styles.realContainer, {backgroundColor: theme.colors.card}]}>
+      <ThemedView style={[styles.headerContainer, {backgroundColor: theme.colors.card}]}>
           <Image
             source={require('@/assets/images/1Point_Logo.png')}
             style={styles.headerImage}
           />
-          <ThemedView style={[styles.headerText, {backgroundColor: theme.colors.background}]}>
-            <ThemedText style={[styles.welcomeText]}>Welcome John!</ThemedText>
+          <ThemedView style={[styles.headerText, {backgroundColor: theme.colors.card}]}>
+            <ThemedText style={[styles.welcomeText]}>WELCOME JOHN</ThemedText>
           </ThemedView>
         </ThemedView>
+        <ThemedView style={[styles.mainContainer, {backgroundColor: theme.colors.background}]}>
 
-        <ThemedText style={styles.subHeadingText}>LATEST UPDATES</ThemedText>
+        <ThemedText style={[styles.subHeadingText, {backgroundColor: theme.colors.background}]}>LATEST UPDATES</ThemedText>
 
         {renderSlider()}
 
-        <ThemedText style={styles.subHeadingText}>SUMMARY AND INSIGHTS</ThemedText>
+        <ThemedText style={[styles.subHeadingText, {backgroundColor: theme.colors.background}]}>SUMMARY AND INSIGHTS</ThemedText>
 
 
       <ThemedView>
         {renderPointsSection()}
       </ThemedView>
 
+      </ThemedView>
       </ThemedView>
 
       
@@ -198,7 +199,14 @@ const styles = StyleSheet.create({
   },
   mainContainer: {
     flex: 1,
-    padding: 15,
+    padding: 30,
+    paddingTop: 20,
+    borderTopLeftRadius: 46,
+    borderTopRightRadius: 46,
+  },
+  realContainer: {
+    flex: 1,
+    paddingTop: 40,
   },
   
     //-------------- Header styling -----------------
@@ -226,6 +234,7 @@ const styles = StyleSheet.create({
   welcomeText: {
     fontSize: 26,
     fontWeight: 'bold',
+    paddingTop: 5,
   },
 
   subHeadingText: {
