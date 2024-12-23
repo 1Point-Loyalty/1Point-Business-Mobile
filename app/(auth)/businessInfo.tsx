@@ -1,13 +1,14 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Image, SafeAreaView, useColorScheme, ScrollView, Dimensions, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, SafeAreaView, useColorScheme, ScrollView, Dimensions, TouchableOpacity, TextInput } from 'react-native';
 import PagerThemedView from 'react-native-pager-view';
 import { DarkTheme } from '@react-navigation/native';
 import { DefaultTheme } from '@react-navigation/native';
 import { useTheme } from '@/constants/ThemeCheck';
 import { TransactionRow } from '@/components/ReuseableComponents/TransactionRow';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { router } from 'expo-router';
 
 const { width } = Dimensions.get('window');
 
@@ -16,70 +17,61 @@ export default function Profile() {
 
   const theme = useTheme();
 
-  type SettingItemProps = {
-    title: string;
-    icon: string;
-  };
-
-  const SettingItem: React.FC<SettingItemProps> = ({ title, icon }) => (
-    <TouchableOpacity style={styles.item}>
-      <Icon name={icon} size={24} color="#707070" style={styles.itemIcon} />
-      <Text style={styles.itemText}>{title}</Text>
-      <Icon name="chevron-right" size={24} color="#B0B0B0" />
-    </TouchableOpacity>
-  );
 
 
-    // Render the invite section
+    
     const renderInviteSection = () => {
       return (
-        <View style={styles.cardWrapper}>
-        <View style={styles.blackCard}>
-          <Image
-            source={require("@/assets/images/Promo_Image.png")} 
-            style={styles.image}
-            resizeMode="contain"
-          />
-         </View>
-      <View style={styles.orangeOverlay}>
-        <View style={styles.contentContainer}>
-        <Image
-            source={require("@/assets/images/Person_Icon.png")} 
-            style={styles.iconImage}
-          />
-          <View style={styles.textContainer}>
-            <Text style={styles.primaryText}>Invite Your Friends to 1Point</Text>
-            <Text style={styles.secondaryText}> Get 100 points every person you invite.</Text>
-          </View>
-          <View style={styles.arrowIcon}>
-          <Icon name="chevron-right" size={32} color="#ffffff" />
-          </View>
-        </View>
-      </View>
+        <ThemedView style={[styles.realContainer, {backgroundColor: theme.colors.background}]}>
+        <TextInput
+         placeholder="Business Name"
+         style={styles.input}
+        />
+        <TextInput
+        placeholder="Business Address"
+        style={styles.input}
+       />
+       <TextInput
+        placeholder="Business About"
+        style={styles.input}
+       />
+       <TextInput
+        placeholder="Busines Hours"
+        style={styles.input}
+       />
+       <View style={[styles.container, {backgroundColor: theme.colors.background}]}>
+      <Text style={styles.headerText2}>Upload Your Logo</Text>
+      <Image
+        source={{ uri: 'https://via.placeholder.com/150' }} 
+        style={styles.image2}
+      />
+      <TouchableOpacity style={styles.button}>
+        <Text style={styles.buttonText}>Upload+</Text>
+      </TouchableOpacity>
     </View>
+    <TouchableOpacity
+        accessibilityLabel="Submit"
+        style={styles.logoutButton}
+        onPress={() => router.navigate("/home")}
+      >
+        <Text style={styles.logoutText}>Submit</Text>
+      </TouchableOpacity>
+       </ThemedView>
+       
       );
     };
 
 
-  // Render the profile section
+  
   const renderProfileSection = () => {
     return (
       <ThemedView style={{ backgroundColor: theme.colors.background}}>
-        <SettingItem title="Business Settings" icon="store" />
-        <SettingItem title="Personal Settings" icon="person" />
-        <SettingItem title="Security" icon="lock" />
-        <SettingItem title="Language" icon="language" />
-        <SettingItem title="Help" icon="help" />
-
-        <TouchableOpacity style={styles.logoutButton}>
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
-    
+        
       </ThemedView>
     );
   };
 
-  // Render the home screen 
+  
   return (
     <SafeAreaView style={[styles.main, {backgroundColor: theme.colors.card}]}>
       <ThemedView style={[styles.realContainer, {backgroundColor: theme.colors.card}]}>
@@ -89,20 +81,18 @@ export default function Profile() {
             style={styles.headerImage}
           />
           <ThemedView style={[styles.headerText, {backgroundColor: theme.colors.card}]}>
-            <ThemedText style={[styles.welcomeText]}>PROFILE</ThemedText>
+            <ThemedText style={[styles.welcomeText]}>BUSINESS INFO</ThemedText>
           </ThemedView>
         </ThemedView>
       
         <ThemedView style={[styles.mainContainer, {backgroundColor: theme.colors.background}]} >
           {renderInviteSection()}
 
-          <ThemedView  style={{marginTop: 75}}>
-        {renderProfileSection()}
+         
+         
       </ThemedView>
-
-
           </ThemedView>
-</ThemedView>
+
     </SafeAreaView >
   );
 };
@@ -349,10 +339,10 @@ const styles = StyleSheet.create({
     width: '130%',
     height: '130%',
     marginTop: -30, 
-    marginLeft: -75,
+    marginLeft: -75, 
   },
   logoutButton: {
-    backgroundColor: '#D9534F',
+    backgroundColor: '#E95F23',
     padding: 15,
     margin: 20,
     marginTop: 25,
@@ -389,5 +379,58 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginTop: 20,
   },
+  input: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '95%',
+    height: 40,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#a1a09c',
+    padding: 10,
+    borderRadius: 5,
+   marginLeft: 10
+},
+container: {
+  width: '95%',
+  height: 300,
+  //flex: 1,
+  justifyContent: 'center',
+  alignItems: 'center',
+  padding: 20,
+  backgroundColor: '#fff',
+  marginLeft: 10,
+  borderColor: '#fff'
+},
+button: {
+  width: 175,
+  height:40,
+  backgroundColor: '#007bff',
+  paddingVertical: 10,
+  paddingHorizontal: 20,
+  borderRadius: 5,
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+buttonText: {
+  color: '#fff',
+  fontSize: 18,
+  marginTop: -3
+},
+image2: {
+  width: 150,
+  height: 150,
+  marginBottom: 20,
+  borderRadius: 75, 
+  borderWidth: 1,
+  borderColor: '#ddd',
+  backgroundColor: '#f0f0f0',
+},
+headerText2: {
+  fontSize: 22,
+  fontWeight: 'bold',
+  marginBottom: 20,
+},
+
   
 });

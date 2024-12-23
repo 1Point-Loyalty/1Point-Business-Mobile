@@ -181,7 +181,7 @@ export default function SignUp() {
 
     try {
         await auth().createUserWithEmailAndPassword(email, password);
-        router.navigate('/businessInfo');
+        router.navigate("/(auth)\businessInfo");
     } catch (e: any) {
       const err = e as FirebaseError;
       alert("Sign in failed: " + err.message);
