@@ -5,15 +5,9 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
-  Linking,
-  SafeAreaView,
 } from "react-native";
 import { useRouter } from "expo-router";
-import CheckBox from "expo-checkbox";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
 import PhoneInput from "react-native-phone-input";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { FontAwesome5 } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import auth from "@react-native-firebase/auth";
@@ -23,6 +17,8 @@ import { useTheme } from "@/constants/ThemeCheck";
 export default function SignUp() {
   const router = useRouter();
   const navigation = useNavigation();
+
+  navigation.setOptions({ headerShown: false });
 
   const theme = useTheme();
 
@@ -120,45 +116,23 @@ export default function SignUp() {
 
   // Function to validate password input
   const handlePassword = () => {
-    // password must contain at least one number
     let numberCheck = /\d/;
-
-    //password must contain uppercase letter
     let upperCaseCheck = /[A-Z]/;
-
-    //password must contain lowercase letter
     let lowerCaseCheck = /[a-z]/;
-
-    //password must contain special character
     let specialCharCheck = /[!@#$%^&*_]/;
 
-    // password must be at least 8 characters long
-    if (password.length < 8) {
-      setPasswordError("Password must be at least 8 characters long");
-    }
-
-    // password must contain at least one number
-    else if (numberCheck.test(password) === false) {
-      setPasswordError("Password must contain at least one number");
-    }
-
-    // password must contain at least one uppercase letter
-    else if (upperCaseCheck.test(password) === false) {
-      setPasswordError("Password must contain at least one uppercase letter");
-    }
-
-    // password must contain at least one lowercase letter
-    else if (lowerCaseCheck.test(password) === false) {
-      setPasswordError("Password must contain at least one lowercase letter");
-    }
-
-    // password must contain at least one special character
-    else if (specialCharCheck.test(password) === false) {
-      setPasswordError("Password must contain at least one special character");
-    }
-
-    // password is valid
-    else {
+    // password must meet all the criteria
+    if (
+      password.length < 8 ||
+      !numberCheck.test(password) ||
+      !upperCaseCheck.test(password) ||
+      !lowerCaseCheck.test(password) ||
+      !specialCharCheck.test(password)
+    ) {
+      setPasswordError(
+        "Password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, a number, and a special character"
+      );
+    } else {
       setPasswordError("");
     }
   };
@@ -198,6 +172,10 @@ export default function SignUp() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.card }]}>
+      <Image
+        source={require("@/assets/images/1Point_Logo.png")}
+        style={styles.logo}
+      />
       <Text style={styles.header}>Welcome to 1Point!</Text>
       <Text style={styles.subHeader}>
         Sign up to start your journey with us
@@ -238,7 +216,10 @@ export default function SignUp() {
       >
         <Text style={styles.buttonText}>Sign up</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.loginLink}>
+      <TouchableOpacity
+        onPress={() => router.navigate("/")}
+        style={styles.loginLink}
+      >
         <Text style={styles.loginText}>
           Already have an account? <Text style={styles.loginText2}>Login</Text>
         </Text>
@@ -294,6 +275,11 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     //fontWeight: 'bold',
+  },
+  logo: {
+    width: 170,
+    height: 170,
+    marginBottom: 75,
   },
   loginLink: {
     marginTop: 30,
