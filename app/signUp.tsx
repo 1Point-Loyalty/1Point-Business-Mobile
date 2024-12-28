@@ -1,20 +1,24 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Linking, SafeAreaView } from 'react-native';
-import { useRouter } from 'expo-router';
-import CheckBox from "expo-checkbox";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+} from "react-native";
+import { useRouter } from "expo-router";
 import PhoneInput from "react-native-phone-input";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { FontAwesome5 } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import auth from "@react-native-firebase/auth";
 import { FirebaseError } from "firebase/app";
-import { useTheme } from '@/constants/ThemeCheck';
-
+import { useTheme } from "@/constants/ThemeCheck";
 
 export default function SignUp() {
   const router = useRouter();
   const navigation = useNavigation();
+
+  navigation.setOptions({ headerShown: false });
 
   const theme = useTheme();
 
@@ -112,45 +116,23 @@ export default function SignUp() {
 
   // Function to validate password input
   const handlePassword = () => {
-    // password must contain at least one number
     let numberCheck = /\d/;
-
-    //password must contain uppercase letter
     let upperCaseCheck = /[A-Z]/;
-
-    //password must contain lowercase letter
     let lowerCaseCheck = /[a-z]/;
-
-    //password must contain special character
     let specialCharCheck = /[!@#$%^&*_]/;
 
-    // password must be at least 8 characters long
-    if (password.length < 8) {
-      setPasswordError("Password must be at least 8 characters long");
-    }
-
-    // password must contain at least one number
-    else if (numberCheck.test(password) === false) {
-      setPasswordError("Password must contain at least one number");
-    }
-
-    // password must contain at least one uppercase letter
-    else if (upperCaseCheck.test(password) === false) {
-      setPasswordError("Password must contain at least one uppercase letter");
-    }
-
-    // password must contain at least one lowercase letter
-    else if (lowerCaseCheck.test(password) === false) {
-      setPasswordError("Password must contain at least one lowercase letter");
-    }
-
-    // password must contain at least one special character
-    else if (specialCharCheck.test(password) === false) {
-      setPasswordError("Password must contain at least one special character");
-    }
-
-    // password is valid
-    else {
+    // password must meet all the criteria
+    if (
+      password.length < 8 ||
+      !numberCheck.test(password) ||
+      !upperCaseCheck.test(password) ||
+      !lowerCaseCheck.test(password) ||
+      !specialCharCheck.test(password)
+    ) {
+      setPasswordError(
+        "Password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, a number, and a special character"
+      );
+    } else {
       setPasswordError("");
     }
   };
@@ -175,126 +157,137 @@ export default function SignUp() {
 
   const signUp = async () => {
     if (!email || !password) {
-        alert("Email and password must not be empty.");
-        return;
+      alert("Email and password must not be empty.");
+      return;
     }
 
     try {
-        await auth().createUserWithEmailAndPassword(email, password);
-        router.navigate("/(auth)\businessInfo");
+      await auth().createUserWithEmailAndPassword(email, password);
+      router.navigate("/businessInfo");
     } catch (e: any) {
       const err = e as FirebaseError;
       alert("Sign in failed: " + err.message);
     }
   };
 
-    return (
-        <View style={[styles.container, {backgroundColor: theme.colors.card}]}>
-        <Text style={styles.header}>Welcome to 1Point!</Text>
-        <Text style={styles.subHeader}>Sign up to start your journey with us</Text>
-        <TextInput
-         accessibilityLabel="name input"
-         placeholder="Full Name"
-         style={styles.input}
-         onChangeText={setFullName}
-        />
-        <PhoneInput
-            
-            //initialCountry="ca"
-            //countriesList={countriesList}
-            textProps={{
-              placeholder: "Phone Number",
-              value: phoneNumber,
-              onChangeText: handlePhoneNumberChange,
-              
-            }}
-            style={styles.input}
-          />
-        <TextInput
-           accessibilityLabel="email input"
-           placeholder="Email"
-           style={styles.input}
-           onChangeText={setEmail}
-        />
-        <TextInput
-            accessibilityLabel="password input"
-            placeholder="Password"
-            secureTextEntry={true}
-            style={styles.input}
-            onChangeText={setPassword}
-        />
-        <TouchableOpacity
+  return (
+    <View style={[styles.container, { backgroundColor: theme.colors.card }]}>
+      <Image
+        source={require("@/assets/images/1Point_Logo.png")}
+        style={styles.logo}
+      />
+      <Text style={styles.header}>Welcome to 1Point!</Text>
+      <Text style={styles.subHeader}>
+        Sign up to start your journey with us
+      </Text>
+      <TextInput
+        accessibilityLabel="name input"
+        placeholder="Full Name"
+        style={styles.input}
+        onChangeText={setFullName}
+      />
+      <PhoneInput
+        initialCountry="ca"
+        countriesList={countriesList}
+        textProps={{
+          placeholder: "Phone Number",
+          value: phoneNumber,
+          onChangeText: handlePhoneNumberChange,
+        }}
+        style={styles.input}
+      />
+      <TextInput
+        accessibilityLabel="email input"
+        placeholder="Email"
+        style={styles.input}
+        onChangeText={setEmail}
+      />
+      <TextInput
+        accessibilityLabel="password input"
+        placeholder="Password"
+        secureTextEntry={true}
+        style={styles.input}
+        onChangeText={setPassword}
+      />
+      <TouchableOpacity
         accessibilityLabel="signup button"
         style={styles.button}
         onPress={signUp}
       >
         <Text style={styles.buttonText}>Sign up</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.loginLink} 
-        >
+      <TouchableOpacity
+        onPress={() => router.navigate("/")}
+        style={styles.loginLink}
+      >
         <Text style={styles.loginText}>
-        Already have an account? <Text style={styles.loginText2}>Login</Text>
-    </Text>
-        </TouchableOpacity>
+          Already have an account? <Text style={styles.loginText2}>Login</Text>
+        </Text>
+      </TouchableOpacity>
     </View>
-);
-};
+  );
+}
 
 const styles = StyleSheet.create({
-container: {
+  container: {
     flex: 1,
-    backgroundColor: '#e3e2de',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#e3e2de",
+    alignItems: "center",
+    justifyContent: "center",
     padding: 20,
-},
-header: {
-    fontSize: 50, 
-    fontWeight: 'bold',
+  },
+  header: {
+    fontSize: 50,
+    fontWeight: "bold",
     marginTop: -75,
-    marginBottom: 10,  
-    textAlign: 'left', 
-    color: '#000', 
-    width: '95%',
-},
-subHeader: {
+    marginBottom: 10,
+    textAlign: "left",
+    color: "#000",
+    width: "95%",
+  },
+  subHeader: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginTop: 10,
     marginBottom: 45,
-    color: '#000', 
-    width: '95%',
-},
-input: {
-    width: '95%',
+    color: "#000",
+    width: "95%",
+  },
+  input: {
+    width: "95%",
     height: 40,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#a1a09c',
+    borderColor: "#a1a09c",
     padding: 10,
     borderRadius: 5,
-},
-button: {
-    backgroundColor: '#E95F23',
-    width: '95%',
+  },
+  button: {
+    backgroundColor: "#E95F23",
+    width: "95%",
     padding: 10,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 40,
     marginBottom: 10,
     borderRadius: 5,
-},
-buttonText: {
-    color: 'white',
+  },
+  buttonText: {
+    color: "white",
     fontSize: 16,
     //fontWeight: 'bold',
-},
-loginLink: {
+  },
+  logo: {
+    width: 170,
+    height: 170,
+    marginBottom: 75,
+  },
+  loginLink: {
     marginTop: 30,
-},
-loginText: {
-    color: 'black',
-},
-loginText2: {
-    color: '#E95F23',
-}
+  },
+  loginText: {
+    color: "black",
+  },
+  loginText2: {
+    color: "#E95F23",
+  },
 });

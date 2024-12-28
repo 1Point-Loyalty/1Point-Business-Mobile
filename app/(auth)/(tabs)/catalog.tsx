@@ -1,5 +1,14 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Linking, SafeAreaView } from 'react-native';
-import { useRouter } from 'expo-router';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  Linking,
+  SafeAreaView,
+} from "react-native";
+import { useRouter } from "expo-router";
 import CheckBox from "expo-checkbox";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import PhoneInput from "react-native-phone-input";
@@ -9,8 +18,7 @@ import React, { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import auth from "@react-native-firebase/auth";
 import { FirebaseError } from "firebase/app";
-import { useTheme } from '@/constants/ThemeCheck';
-
+import { useTheme } from "@/constants/ThemeCheck";
 
 export default function SignUp() {
   const router = useRouter();
@@ -175,126 +183,125 @@ export default function SignUp() {
 
   const signUp = async () => {
     if (!email || !password) {
-        alert("Email and password must not be empty.");
-        return;
+      alert("Email and password must not be empty.");
+      return;
     }
 
     try {
-        await auth().createUserWithEmailAndPassword(email, password);
-        router.navigate('/businessInfo');
+      await auth().createUserWithEmailAndPassword(email, password);
+      router.navigate("/businessInfo");
     } catch (e: any) {
       const err = e as FirebaseError;
       alert("Sign in failed: " + err.message);
     }
   };
 
-    return (
-        <View style={[styles.container, {backgroundColor: theme.colors.card}]}>
-        <Text style={styles.header}>Welcome to 1Point!</Text>
-        <Text style={styles.subHeader}>Sign up to start your journey with us</Text>
-        <TextInput
-         accessibilityLabel="name input"
-         placeholder="Full Name"
-         style={styles.input}
-         onChangeText={setFullName}
-        />
-        <PhoneInput
-            
-            //initialCountry="ca"
-            //countriesList={countriesList}
-            textProps={{
-              placeholder: "Phone Number",
-              value: phoneNumber,
-              onChangeText: handlePhoneNumberChange,
-              
-            }}
-            style={styles.input}
-          />
-        <TextInput
-           accessibilityLabel="email input"
-           placeholder="Email"
-           style={styles.input}
-           onChangeText={setEmail}
-        />
-        <TextInput
-            accessibilityLabel="password input"
-            placeholder="Password"
-            secureTextEntry={true}
-            style={styles.input}
-            onChangeText={setPassword}
-        />
-        <TouchableOpacity
+  return (
+    <View style={[styles.container, { backgroundColor: theme.colors.card }]}>
+      <Text style={styles.header}>Welcome to 1Point!</Text>
+      <Text style={styles.subHeader}>
+        Sign up to start your journey with us
+      </Text>
+      <TextInput
+        accessibilityLabel="name input"
+        placeholder="Full Name"
+        style={styles.input}
+        onChangeText={setFullName}
+      />
+      <PhoneInput
+        initialCountry="ca"
+        countriesList={countriesList}
+        textProps={{
+          placeholder: "Phone Number",
+          value: phoneNumber,
+          onChangeText: handlePhoneNumberChange,
+        }}
+        style={styles.input}
+      />
+      <TextInput
+        accessibilityLabel="email input"
+        placeholder="Email"
+        style={styles.input}
+        onChangeText={setEmail}
+      />
+      <TextInput
+        accessibilityLabel="password input"
+        placeholder="Password"
+        secureTextEntry={true}
+        style={styles.input}
+        onChangeText={setPassword}
+      />
+      <TouchableOpacity
         accessibilityLabel="signup button"
         style={styles.button}
         onPress={signUp}
       >
         <Text style={styles.buttonText}>Sign up</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.loginLink} 
-        >
+      <TouchableOpacity style={styles.loginLink}>
         <Text style={styles.loginText}>
-        Already have an account? <Text style={styles.loginText2}>Login</Text>
-    </Text>
-        </TouchableOpacity>
+          Already have an account? <Text style={styles.loginText2}>Login</Text>
+        </Text>
+      </TouchableOpacity>
     </View>
-);
-};
+  );
+}
 
 const styles = StyleSheet.create({
-container: {
+  container: {
     flex: 1,
-    backgroundColor: '#e3e2de',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#e3e2de",
+    alignItems: "center",
+    justifyContent: "center",
     padding: 20,
-},
-header: {
-    fontSize: 50, 
-    fontWeight: 'bold',
+  },
+  header: {
+    fontSize: 50,
+    fontWeight: "bold",
     marginTop: -75,
-    marginBottom: 10,  
-    textAlign: 'left', 
-    color: '#000', 
-    width: '95%',
-},
-subHeader: {
+    marginBottom: 10,
+    textAlign: "left",
+    color: "#000",
+    width: "95%",
+  },
+  subHeader: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginTop: 10,
     marginBottom: 45,
-    color: '#000', 
-    width: '95%',
-},
-input: {
-    width: '95%',
+    color: "#000",
+    width: "95%",
+  },
+  input: {
+    width: "95%",
     height: 40,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#a1a09c',
+    borderColor: "#a1a09c",
     padding: 10,
     borderRadius: 5,
-},
-button: {
-    backgroundColor: '#E95F23',
-    width: '95%',
+  },
+  button: {
+    backgroundColor: "#E95F23",
+    width: "95%",
     padding: 10,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 40,
     marginBottom: 10,
     borderRadius: 5,
-},
-buttonText: {
-    color: 'white',
+  },
+  buttonText: {
+    color: "white",
     fontSize: 16,
     //fontWeight: 'bold',
-},
-loginLink: {
+  },
+  loginLink: {
     marginTop: 30,
-},
-loginText: {
-    color: 'black',
-},
-loginText2: {
-    color: '#E95F23',
-}
+  },
+  loginText: {
+    color: "black",
+  },
+  loginText2: {
+    color: "#E95F23",
+  },
 });
