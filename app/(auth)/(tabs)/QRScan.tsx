@@ -37,6 +37,7 @@ const QRScan = () => {
     );
   }
 
+
   return (
     <View style={styles.container}>
       {showQRCode ? (
