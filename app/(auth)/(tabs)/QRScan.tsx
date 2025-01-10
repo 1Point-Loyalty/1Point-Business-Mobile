@@ -2,19 +2,61 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Button, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
+import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 
 const QRScan = () => {
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
-  const [qrCode, setQrCode] = useState("");
+  const [qrCode, setQRCode] = useState("");
   const [showQRCode, setShowQRCode] = useState(false);
+  interface UserInfo {
+    [key: string]: any;
+  }
 
-  const handleQRCodeDetected = (code: string) => {
-    setQrCode(code);
-    setTimeout(() => {
-      setShowQRCode(true);
-    }, 1000);
+  const [userInfo, setUserInfo] = useState<UserInfo>({ firstName: "" });
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////
+
+  const handleQRCodeDetected = async (code: string) => {
+    setShowQRCode(true);
+    setQRCode(code);
+
+    console.log("QR Code detected: ", code);
+
+    // decrypt the qr code
+    const user = auth().currentUser;
+    const token = await user?.getIdToken(); // Retrieve the token from storage
+
+    if (!token) {
+      alert("Error, No authentication token found");
+      return;
+    }
+
+    const response = await fetch(
+      "https://admin.1-point.ca/api/decryptUserDetails",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ encryptedQRCode: code }),
+      }
+    );
+
+    if (!response.ok) {
+      alert("Error, Unable to decrypt the QR code");
+      return;
+    } else {
+      console.log(response);
+      const data = await response.json();
+      console.log(data);
+
+      setUserInfo(data[0]);
+    }
   };
+
+  ////////////////////////////////////////////////////////////////////////////////////////
 
   if (!permission) {
     // Camera permissions are still loading.
@@ -37,13 +79,26 @@ const QRScan = () => {
     );
   }
 
-
   return (
     <View style={styles.container}>
       {showQRCode ? (
         <View style={styles.qrCodeContainer}>
           <Text style={styles.title}>QR Code Information</Text>
           <Text style={styles.qrCode}>{qrCode}</Text>
+          <Text style={styles.qrCode}>{JSON.stringify(userInfo)}</Text>
+          <Text style={styles.qrCode}>Name: {userInfo.firstName}</Text>
+          <Text style={styles.qrCode}>
+            Available Points: {userInfo.currentPoints}
+          </Text>
+
+          <Button
+            title="Scan Again"
+            onPress={() => {
+              setShowQRCode(false);
+              setQRCode("");
+              setUserInfo({});
+            }}
+          />
         </View>
       ) : (
         <CameraView
