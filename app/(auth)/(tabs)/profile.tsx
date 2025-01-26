@@ -1,6 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import React, { useEffect, useRef, useState } from "react";
+import { useRouter } from "expo-router";
 import {
   View,
   Text,
@@ -18,11 +19,13 @@ import { DefaultTheme } from "@react-navigation/native";
 import { useTheme } from "@/constants/ThemeCheck";
 import { TransactionRow } from "@/components/ReuseableComponents/TransactionRow";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import auth from "@react-native-firebase/auth";
 
 const { width } = Dimensions.get("window");
 
 export default function Profile() {
   const theme = useTheme();
+  const router = useRouter();
 
   type SettingItemProps = {
     title: string;
@@ -82,7 +85,7 @@ export default function Profile() {
         <SettingItem title="Language" icon="language" />
         <SettingItem title="Help" icon="help" />
 
-        <TouchableOpacity style={styles.logoutButton}>
+        <TouchableOpacity style={styles.logoutButton} onPress={() => auth().signOut()}>
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </ThemedView>
