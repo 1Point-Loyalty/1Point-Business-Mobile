@@ -115,7 +115,12 @@ export default function Login() {
           secureTextEntry={true}
           onChangeText={setPassword}
         />
-        <Text style={styles.forgotPassword}>Forgot your Password?</Text>
+        <TouchableOpacity
+          onPress={() => router.navigate("/forgot_password")}
+          style={styles.forgotPasswordText}
+        >
+          <Text style={styles.forgotPassword}>Forgot your Password?</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           onPress={handleLogin}
           style={styles.button}
@@ -234,6 +239,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     marginTop: -50,
     marginBottom: 10,
+  },
+  forgotPasswordText: {
+    marginBottom: 10,
+    textAlign: "right",
+    width: "100%",
+    color: "blue",
   },
   socialButton: {
     padding: 10,
