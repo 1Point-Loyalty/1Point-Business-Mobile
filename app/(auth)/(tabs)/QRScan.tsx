@@ -1,25 +1,37 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Button, StyleSheet } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
-import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import { CameraView, useCameraPermissions } from "expo-camera";
+import auth from "@react-native-firebase/auth";
+import QRInfoLoadingState from "@/components/loadingState/QRInfoLoadingState";
 
 const QRScan = () => {
-  const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
-  const [qrCode, setQRCode] = useState("");
   const [showQRCode, setShowQRCode] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
   interface UserInfo {
-    [key: string]: any;
+    createdAt: string;
+    currentPoints: number;
+    email: string;
+    firstName: string;
+    id: string;
+    ipAddress: string;
+    isAdmin: number;
+    isBO: number;
+    lastName: string;
+    merchantID: string | null;
+    phoneNumber: string;
+    status: "ACTIVE" | "INACTIVE";
+    updatedAt: string;
   }
 
-  const [userInfo, setUserInfo] = useState<UserInfo>({ firstName: "" });
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
 
   ///////////////////////////////////////////////////////////////////////////////////////////////
 
   const handleQRCodeDetected = async (code: string) => {
     setShowQRCode(true);
-    setQRCode(code);
+    setIsLoading(true);
 
     console.log("QR Code detected: ", code);
 
@@ -54,6 +66,10 @@ const QRScan = () => {
 
       setUserInfo(data[0]);
     }
+
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
   };
 
   ////////////////////////////////////////////////////////////////////////////////////////
@@ -66,43 +82,73 @@ const QRScan = () => {
   if (!permission.granted) {
     // Camera permissions are not granted yet.
     return (
-      <View style={styles.container}>
-        <Text selectionColor={"white"} style={styles.message}>
-          We need your permission to show the camera
+      <View style={styles.permissionContainer}>
+        <Text style={styles.permissionMessage}>
+          We need your permission to use the camera
         </Text>
         <Button
           color={"black"}
           onPress={requestPermission}
-          title="grant permission"
+          title="Grant Permission"
         />
       </View>
     );
   }
 
+  /////////////////////////////////////////////////////////////////////////////
+  const UserDetails: React.FC<{ userInfo: UserInfo }> = ({ userInfo }) => {
+    return (
+      <>
+        <Text style={styles.title}>Customer Information</Text>
+        <Text style={styles.qrCode}>Name: {userInfo.firstName}</Text>
+        <Text style={styles.qrCode}>
+          Available Points: {userInfo.currentPoints}
+        </Text>
+        <Text style={styles.qrCode}>
+          Available to Redeem:{" "}
+          {"$" +
+            // find out how many points can be redeemed
+            // every 1000 points can be redeemed for $10
+            Math.floor(userInfo.currentPoints / 1000) * 10}
+        </Text>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.actionButton}>
+            <Text style={styles.buttonText}>Award Points</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity disabled={true} style={styles.actionButton}>
+            <Text style={styles.buttonText}>Redeem Points</Text>
+          </TouchableOpacity>
+        </View>
+      </>
+    );
+  };
+  //////////////////////////////////////////////////////////////////////////
+
   return (
     <View style={styles.container}>
       {showQRCode ? (
         <View style={styles.qrCodeContainer}>
-          <Text style={styles.title}>QR Code Information</Text>
-          <Text style={styles.qrCode}>{qrCode}</Text>
-          <Text style={styles.qrCode}>{JSON.stringify(userInfo)}</Text>
-          <Text style={styles.qrCode}>Name: {userInfo.firstName}</Text>
-          <Text style={styles.qrCode}>
-            Available Points: {userInfo.currentPoints}
-          </Text>
-
-          <Button
-            title="Scan Again"
+          {isLoading ? (
+            <QRInfoLoadingState />
+          ) : userInfo ? (
+            <UserDetails userInfo={userInfo} />
+          ) : (
+            <Text>No user information available</Text>
+          )}
+          <TouchableOpacity
+            style={styles.scanAgainButton}
             onPress={() => {
               setShowQRCode(false);
-              setQRCode("");
-              setUserInfo({});
+              setUserInfo(null);
             }}
-          />
+          >
+            <Text style={styles.scanAgainText}>Scan Again</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <CameraView
-          style={StyleSheet.absoluteFill}
+          style={styles.camera}
           facing="back"
           barcodeScannerSettings={{
             barcodeTypes: ["qr"],
@@ -119,43 +165,79 @@ export default QRScan;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
+    backgroundColor: "#f8f9fa",
   },
-  message: {
+  permissionContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f8f9fa",
+  },
+  permissionMessage: {
+    fontSize: 18,
     textAlign: "center",
-    paddingBottom: 10,
+    marginBottom: 20,
+    color: "#495057",
   },
   camera: {
     flex: 1,
-  },
-  buttonContainer: {
-    flex: 1,
-    flexDirection: "row",
-    backgroundColor: "transparent",
-    margin: 64,
-  },
-  button: {
-    flex: 1,
-    padding: 5,
-    alignItems: "center",
-  },
-  text: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "white",
   },
   qrCodeContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    paddingHorizontal: 20,
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
+    color: "#212529",
   },
   qrCode: {
     fontSize: 18,
-    color: "#333",
+    color: "#495057",
+    backgroundColor: "#e9ecef",
+    padding: 10,
+    borderRadius: 8,
+    textAlign: "center",
+    marginBottom: 10,
+    width: "100%",
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    paddingVertical: 20,
+    marginBottom: 20,
+  },
+  actionButton: {
+    backgroundColor: "#f8f9fa",
+    borderColor: "#E95F23",
+    borderWidth: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    width: "45%",
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#000",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  scanAgainButton: {
+    marginTop: 20,
+    backgroundColor: "#E95F23",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    width: "95%",
+  },
+  scanAgainText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
+    textAlign: "center",
   },
 });
