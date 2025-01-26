@@ -11,6 +11,8 @@ import React, { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/constants/ThemeCheck";
+import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import { FirebaseError } from "firebase/app";
 
 export default function Login() {
   const router = useRouter();
@@ -19,6 +21,75 @@ export default function Login() {
   navigation.setOptions({ headerShown: false });
 
   const theme = useTheme();
+
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
+
+  const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
+  // Function to handle registration
+  const handleLogin = async () => {
+    // format for email: characters@characters.characters
+    var emailError = "";
+    let emailFormat = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w\w+)+$/;
+    if (emailFormat.test(email) === false) {
+      emailError = "Please enter a valid email address";
+    }
+
+    var passwordError = "";
+    // password must contain at least one number
+    let numberCheck = /\d/;
+
+    //password must contain uppercase letter
+    let upperCaseCheck = /[A-Z]/;
+
+    //password must contain lowercase letter
+    let lowerCaseCheck = /[a-z]/;
+
+    //password must contain special character
+    let specialCharCheck = /[!@#$%^&*_]/;
+
+    // password must be at least 8 characters long
+    if (password.length < 8) {
+      passwordError = "Password must be at least 8 characters long";
+    }
+
+    // password must contain at least one number
+    else if (numberCheck.test(password) === false) {
+      passwordError = "Password must contain at least one number";
+    }
+
+    // password must contain at least one uppercase letter
+    else if (upperCaseCheck.test(password) === false) {
+      passwordError = "Password must contain at least one uppercase letter";
+    }
+
+    // password must contain at least one lowercase letter
+    else if (lowerCaseCheck.test(password) === false) {
+      passwordError = "Password must contain at least one lowercase letter";
+    }
+
+    // password must contain at least one special character
+    else if (specialCharCheck.test(password) === false) {
+      passwordError = "Password must contain at least one special character";
+    }
+
+    if (emailError != "" || passwordError != "") {
+      alert(`Failed Validations: \n ${emailError} \n ${passwordError}`);
+      return;
+    }
+    try {
+      await auth().signInWithEmailAndPassword(email, password);
+    } catch (e: any) {
+      const err = e as FirebaseError;
+      alert(
+        "Sign up failed - please check if entered email and password are correct"
+      );
+      console.log(err.message);
+      return;
+    }
+  };
 
   return (
     <ThemedView
@@ -36,15 +107,17 @@ export default function Login() {
           style={styles.input}
           placeholder="Email"
           keyboardType="email-address"
+          onChangeText={setEmail}
         />
         <TextInput
           style={styles.input}
           placeholder="Password"
           secureTextEntry={true}
+          onChangeText={setPassword}
         />
         <Text style={styles.forgotPassword}>Forgot your Password?</Text>
         <TouchableOpacity
-          onPress={() => router.navigate("/home")}
+          onPress={handleLogin}
           style={styles.button}
         >
           <Text style={styles.buttonText}>Login</Text>
