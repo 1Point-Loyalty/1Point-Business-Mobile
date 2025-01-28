@@ -10,9 +10,6 @@ import {
   useColorScheme,
   ScrollView,
 } from "react-native";
-import PagerThemedView from "react-native-pager-view";
-import { DarkTheme } from "@react-navigation/native";
-import { DefaultTheme } from "@react-navigation/native";
 import { useTheme } from "@/constants/ThemeCheck";
 import { TransactionRow } from "@/components/ReuseableComponents/TransactionRow";
 
