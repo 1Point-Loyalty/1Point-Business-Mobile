@@ -1,12 +1,14 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Image, SafeAreaView, useColorScheme, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Image, SafeAreaView, useColorScheme, ScrollView, TouchableOpacity } from 'react-native';
 import PagerThemedView from 'react-native-pager-view';
 import { DarkTheme } from '@react-navigation/native';
 import { DefaultTheme } from '@react-navigation/native';
 import { useTheme } from '@/constants/ThemeCheck';
 import { PromotionRow } from '@/components/ReuseableComponents/PromotionRow';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 
 export default function Promotions() {
 
@@ -111,8 +113,12 @@ export default function Promotions() {
           {renderPromotionPreview()}
           </ThemedView>
 
+          <View style={styles.headerContainer}>
         <ThemedText style={styles.subHeadingText}>PROMOTION LIST</ThemedText>
-
+        <TouchableOpacity style={styles.editButton} onPress={() => router.navigate("/createpromotion")}>
+          <Ionicons name="add" size={24} color="white" />
+        </TouchableOpacity>
+      </View>
 
       <ThemedView>
         {renderPromotions()}
@@ -127,6 +133,15 @@ export default function Promotions() {
 
 const styles = StyleSheet.create({
   //-------------- Main App styling -----------------
+  editButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 15,
+    padding: 5,
+},
+  
   main: {
     flex: 1,
     paddingTop: 15,

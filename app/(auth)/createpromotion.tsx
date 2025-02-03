@@ -16,9 +16,13 @@ import { useTheme } from "@/constants/ThemeCheck";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
-export default function EditPromotions() {
+export default function CreatePromotions() {
   const theme = useTheme(); 
+  const [image, setImage] = useState(null);
 
+  const handleImageUpload = () => {
+    // We still need a ticket for this
+  };
   
  const renderPromotionPreview = () => {
        return (
@@ -27,10 +31,10 @@ export default function EditPromotions() {
  <ThemedView style={{ backgroundColor: theme.colors.background }}>
              <ThemedView style={[styles.row, styles.shadowProp, { backgroundColor: theme.colors.card }]}>
                  <View style={styles.imageContainer}>
-                     <Image
-                         source={require('@/assets/images/Promotion.png')}
-                         style={styles.pointAmounts}
-                     />
+                     
+                     <TouchableOpacity style={styles.uploadButton} onPress={handleImageUpload}>
+                <ThemedText style={styles.uploadButtonText}>Upload Image</ThemedText>
+              </TouchableOpacity>
                  </View>
              </ThemedView>
          </ThemedView>
@@ -75,7 +79,7 @@ export default function EditPromotions() {
               <ThemedText style={styles.buttonText}>Cancel</ThemedText>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.button, styles.saveButton]} onPress={() => {/* Add save logic here */}}>
-              <ThemedText style={styles.buttonText}>Save</ThemedText>
+              <ThemedText style={styles.buttonText}>Create</ThemedText>
             </TouchableOpacity>
           </View>
       
@@ -102,7 +106,7 @@ export default function EditPromotions() {
           <ThemedView
             style={[styles.headerText, { backgroundColor: theme.colors.card }]}
           >
-            <ThemedText style={[styles.welcomeText]}>Edit Promotions</ThemedText>
+            <ThemedText style={[styles.welcomeText]}>Create Promotion</ThemedText>
           </ThemedView>
         </ThemedView>
         <ThemedView
@@ -117,7 +121,7 @@ export default function EditPromotions() {
               { backgroundColor: theme.colors.background },
             ]}
           >
-            YOUR CURRENT IMAGE
+            PROMOTION IMAGE
           </ThemedText>
 
           {renderPromotionPreview()}
@@ -128,7 +132,7 @@ export default function EditPromotions() {
               { backgroundColor: theme.colors.background },
             ]}
           >
-            EDIT PROMOTION DETAILS
+            PROMOTION DETAILS
           </ThemedText>
 
           <ThemedView>{CircularInputs()}</ThemedView>
@@ -409,5 +413,16 @@ const styles = StyleSheet.create({
   },
   inactiveDot: {
     backgroundColor: "gray",
+  },
+  uploadButton: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: 'green',
+    borderRadius: 5,
+  },
+  uploadButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
