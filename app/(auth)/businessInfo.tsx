@@ -13,9 +13,10 @@ import {
   TouchableOpacity,
   TextInput,
 } from "react-native";
-
+import PhoneInput from "react-native-phone-input";
 import { useTheme } from "@/constants/ThemeCheck";
 import { router, useNavigation } from "expo-router";
+import auth from "@react-native-firebase/auth";
 
 const { width } = Dimensions.get("window");
 
@@ -25,6 +26,67 @@ export default function Profile() {
   const navigation = useNavigation();
   navigation.setOptions({ headerShown: false });
 
+  const [name, setName] = useState("");
+  const [address, setAddress] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [website, setWebsite] = useState("");
+  const [about, setAbout] = useState("");
+
+  const countriesList = [
+    {
+      name: "Canada",
+      iso2: "ca",
+      dialCode: "1",
+      priority: 0,
+      areaCodes: null,
+    },
+  ];
+
+  const handleCreateMerchant = async () => {
+      const user = auth().currentUser;
+      const userId = user?.uid;
+      const token = await user?.getIdToken(); // Retrieve the token from storage
+      console.log(userId)
+      console.log("===")
+      console.log(token)
+  
+      if (!token) {
+        alert("Error, No authentication token found");
+        return;
+      };
+  
+      const response = await fetch(
+        `https://admin.1-point.ca/api/createMerchant/${userId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            "name": name,
+            "address": address,
+            "phoneNumber": phoneNumber,
+            "website": website,
+            "bio": about,
+            "logoURL": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTz2jjI7PGWC5jMcHZ6pExeKekMo3LZ1ImU9g&s"
+          }),
+        }
+      );
+
+      console.log(response)
+  
+      if (response.ok) {
+        const result = await response.json();
+        alert("Success, Merchant created successfully");
+        router.navigate("/home")
+      } else {
+        const error = await response.text();
+        console.log(error)
+        alert(error);
+      }
+    }
+
   const renderInviteSection = () => {
     return (
       <ThemedView
@@ -33,10 +95,20 @@ export default function Profile() {
           { backgroundColor: theme.colors.background },
         ]}
       >
-        <TextInput placeholder="Business Name" style={styles.input} />
-        <TextInput placeholder="Business Address" style={styles.input} />
-        <TextInput placeholder="Business About" style={styles.input} />
-        <TextInput placeholder="Busines Hours" style={styles.input} />
+        <TextInput placeholder="Business Name" style={styles.input} onChangeText={setName} />
+        <TextInput placeholder="Business Address" style={styles.input} onChangeText={setAddress}/>
+        <TextInput placeholder="Business Phone" style={styles.input} onChangeText={setPhoneNumber}/>
+        <TextInput placeholder="Business Website" style={styles.input} onChangeText={setWebsite}/>
+        <TextInput placeholder="Business About" style={styles.input} onChangeText={setAbout}/>
+        {/* <PhoneInput
+          initialCountry="ca"
+          countriesList={countriesList}
+          textProps={{
+            placeholder: "Phone Number",
+            value: phoneNumber,
+          }}
+          style={styles.input}
+        /> */}
         <View
           style={[
             styles.container,
@@ -55,7 +127,7 @@ export default function Profile() {
         <TouchableOpacity
           accessibilityLabel="Submit"
           style={styles.logoutButton}
-          onPress={() => router.navigate("/home")}
+          onPress={() => handleCreateMerchant()}
         >
           <Text style={styles.logoutText}>Submit</Text>
         </TouchableOpacity>
