@@ -19,28 +19,32 @@ import { DefaultTheme } from "@react-navigation/native";
 import { useTheme } from "@/constants/ThemeCheck";
 import { TransactionRow } from "@/components/ReuseableComponents/TransactionRow";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import { useNavigation } from "@react-navigation/native";
 import auth from "@react-native-firebase/auth";
-
 const { width } = Dimensions.get("window");
+
 
 export default function Profile() {
   const theme = useTheme();
   const router = useRouter();
 
+
   type SettingItemProps = {
     title: string;
     icon: string;
+    path: string;
   };
 
-  const SettingItem: React.FC<SettingItemProps> = ({ title, icon }) => (
-    <TouchableOpacity style={styles.item}>
+  const SettingItem: React.FC<SettingItemProps> = ({ title, icon, path }) => (
+    <TouchableOpacity
+      onPress={() => router.navigate(`/(auth)/${path}` as any)}
+      style={styles.item}>
       <Icon name={icon} size={24} color="#707070" style={styles.itemIcon} />
       <Text style={styles.itemText}>{title}</Text>
       <Icon name="chevron-right" size={24} color="#B0B0B0" />
     </TouchableOpacity>
   );
 
-  // Render the invite section
   const renderInviteSection = () => {
     return (
       <View style={styles.cardWrapper}>
@@ -75,15 +79,14 @@ export default function Profile() {
     );
   };
 
-  // Render the profile section
   const renderProfileSection = () => {
     return (
       <ThemedView style={{ backgroundColor: theme.colors.background }}>
-        <SettingItem title="Business Settings" icon="store" />
-        <SettingItem title="Personal Settings" icon="person" />
-        <SettingItem title="Security" icon="lock" />
-        <SettingItem title="Language" icon="language" />
-        <SettingItem title="Help" icon="help" />
+        <SettingItem title="Business Info" icon="store" path="BusinessSettings" />
+        <SettingItem title="Account Info" icon="person" path="PersonalSettings" />
+        <SettingItem title="Security" icon="lock" path="security" />
+        <SettingItem title="Language" icon="language" path="home" />
+        <SettingItem title="Help" icon="help" path="businessInfo" />
 
         <TouchableOpacity style={styles.logoutButton} onPress={() => auth().signOut()}>
           <Text style={styles.logoutText}>Logout</Text>
@@ -92,7 +95,6 @@ export default function Profile() {
     );
   };
 
-  // Render the home screen
   return (
     <SafeAreaView style={[styles.main, { backgroundColor: theme.colors.card }]}>
       <ThemedView
@@ -376,7 +378,7 @@ const styles = StyleSheet.create({
     marginLeft: -75,
   },
   logoutButton: {
-    backgroundColor: "#D9534F",
+    backgroundColor: "#E95F23",
     padding: 15,
     margin: 20,
     marginTop: 25,
