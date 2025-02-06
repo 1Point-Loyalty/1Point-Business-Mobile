@@ -23,19 +23,11 @@ export default function Security() {
     const renderModalContent = () => {
         return (
             <View style={styles.modalContentContainer}>
-                <Text style={styles.label}>Password</Text>
-                <TextInput
-                    style={styles.input}
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                />
-                <Text style={styles.label}>Confirm Password</Text>
+                <Text style={styles.label}>Please enter your email below and we will send you a link to change your password:</Text>
                 <TextInput
                     style={styles.input}
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
-                    secureTextEntry
                 />
             </View>
         );
@@ -78,7 +70,7 @@ export default function Security() {
                         </View>
                         {renderModalContent()}
                         <TouchableOpacity style={styles.updateButton} onPress={() => setModalVisible(false)}>
-                            <Text style={styles.updateButtonText}>Update</Text>
+                            <Text style={styles.updateButtonText}>Send</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -166,7 +158,8 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 16,
-        marginBottom: 8,
+        marginBottom: 18,
+        //fontWeight: 'bold',
     },
     input: {
         width: '100%',
