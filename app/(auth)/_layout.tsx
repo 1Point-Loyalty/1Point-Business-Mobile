@@ -21,6 +21,7 @@ export default function RootLayout() {
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="editpromotion" options={{ headerShown: false, title: 'lol', headerTitle: 'Edit Promotion',  }} />
+        <Stack.Screen name="awardpoints" options={{ headerShown: false, title: 'lol', headerTitle: 'Award Points',  }} />
       </Stack>
     </ThemeProvider>
   );
