@@ -1,442 +1,277 @@
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
-import React, { useEffect, useRef, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  SafeAreaView,
-  useColorScheme,
-  ScrollView,
-  Dimensions,
-  TouchableOpacity,
-  TextInput,
-} from "react-native";
-
-import { useTheme } from "@/constants/ThemeCheck";
+import React, { useState } from 'react';
+import { StyleSheet, View, TextInput, Text, TouchableOpacity, ScrollView, Modal } from 'react-native';
 import { router, useNavigation } from "expo-router";
+//import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from 'react-native-vector-icons/Ionicons';
+import CheckBox from '@react-native-community/checkbox';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-const { width } = Dimensions.get("window");
+export default function Register() {
 
-export default function Profile() {
-  const theme = useTheme();
+  const [isChecked, setIsChecked] = useState(false);
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [currentItem, setCurrentItem] = useState('');
+  const [tempValue, setTempValue] = useState('');
+
+  const openModal = (item: string) => {
+    setCurrentItem(item);
+    setTempValue('');
+    setModalVisible(true);
+  };
+
+  const renderModalContent = () => {
+    return (
+      <Text style={styles.modalText}>
+        Ex. 1 point per dollar spent = 1% per dollar
+      </Text>
+    );
+  };
 
   const navigation = useNavigation();
   navigation.setOptions({ headerShown: false });
 
-  const renderInviteSection = () => {
-    return (
-      <ThemedView
-        style={[
-          styles.realContainer,
-          { backgroundColor: theme.colors.background },
-        ]}
-      >
-        <TextInput placeholder="Business Name" style={styles.input} />
-        <TextInput placeholder="Business Address" style={styles.input} />
-        <TextInput placeholder="Business About" style={styles.input} />
-        <TextInput placeholder="Busines Hours" style={styles.input} />
-        <View
-          style={[
-            styles.container,
-            { backgroundColor: theme.colors.background },
-          ]}
-        >
-          <Text style={styles.headerText2}>Upload Your Logo</Text>
-          <Image
-            source={{ uri: "https://via.placeholder.com/150" }}
-            style={styles.image2}
+  return (
+    <View style={styles.container}>
+      <View style={styles.roundedTop}>
+        <Text style={styles.header}>1Point Merchant</Text>
+        <Text style={[styles.header, styles.headerSpacing]}>Registration</Text>
+      </View>
+      <View style={styles.contentContainer}>
+        <TextInput
+          placeholder="Business Name"
+          placeholderTextColor={'black'}
+          style={styles.input}
+        />
+        <TextInput
+          placeholder="Address"
+          placeholderTextColor={'black'}
+          style={styles.input}
+        />
+        <TextInput
+          placeholder="Phone Number"
+          placeholderTextColor={'black'}
+          style={styles.input}
+        />
+        <TextInput
+          placeholder="Website"
+          placeholderTextColor={'black'}
+          style={styles.input}
+        />
+        <TextInput
+          placeholder="About Your Business"
+          placeholderTextColor={'black'}
+          style={[styles.input, styles.aboutInput]}
+        />
+        <TextInput
+          placeholder="Logo URL"
+          placeholderTextColor={'black'}
+          style={styles.input}
+        />
+        <View style={styles.inputContainer}>
+          <TextInput
+            placeholder="Points Issuance Rate (% per Dollar)"
+            placeholderTextColor={'black'}
+            style={styles.pointsText}
           />
-          <TouchableOpacity style={styles.button}>
-            <Text style={styles.buttonText}>Upload+</Text>
+          <TouchableOpacity
+            style={styles.infoButton}
+            onPress={() => openModal('Information')}>
+            <MaterialCommunityIcons
+              style={styles.icon}
+              name="information"
+              size={20}
+              color="#E95F23"
+            />
           </TouchableOpacity>
         </View>
+        <View style={styles.checkboxContainer}>
+          <CheckBox
+            value={isChecked}
+            onValueChange={setIsChecked}
+            tintColors={{ true: '#E95F23', false: 'b#a1a09c' }}
+            style={styles.checkbox}
+          />
+          <Text style={styles.checkboxLabel}>Agree to terms and conditions</Text>
+        </View>
         <TouchableOpacity
-          accessibilityLabel="Submit"
-          style={styles.logoutButton}
+          style={styles.button}
           onPress={() => router.navigate("/home")}
         >
-          <Text style={styles.logoutText}>Submit</Text>
+          <Text style={styles.buttonText}>Submit</Text>
         </TouchableOpacity>
-      </ThemedView>
-    );
-  };
-
-  const renderProfileSection = () => {
-    return (
-      <ThemedView
-        style={{ backgroundColor: theme.colors.background }}
-      ></ThemedView>
-    );
-  };
-
-  return (
-    <SafeAreaView style={[styles.main, { backgroundColor: theme.colors.card }]}>
-      <ThemedView
-        style={[styles.realContainer, { backgroundColor: theme.colors.card }]}
-      >
-        <ThemedView
-          style={[
-            styles.headerContainer,
-            { backgroundColor: theme.colors.card },
-          ]}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={isModalVisible}
+          onRequestClose={() => setModalVisible(false)}
         >
-          <Image
-            source={require("@/assets/images/1Point_Logo.png")}
-            style={styles.headerImage}
-          />
-          <ThemedView
-            style={[styles.headerText, { backgroundColor: theme.colors.card }]}
-          >
-            <ThemedText style={[styles.welcomeText]}>BUSINESS INFO</ThemedText>
-          </ThemedView>
-        </ThemedView>
-
-        <ThemedView
-          style={[
-            styles.mainContainer,
-            { backgroundColor: theme.colors.background },
-          ]}
-        >
-          {renderInviteSection()}
-        </ThemedView>
-      </ThemedView>
-    </SafeAreaView>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.modalBackButton}>
+                  <Icon name="arrow-back-outline" size={24} color="#000" />
+                </TouchableOpacity>
+                <Text style={styles.modalTitle}>Points Issuance Rate Information</Text>
+              </View>
+              {renderModalContent()}
+            </View>
+          </View>
+        </Modal>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  //-------------- Main App styling -----------------
-  main: {
+  container: {
     flex: 1,
-    paddingTop: 15,
+    //backgroundColor: '#e3e2de',
+    padding: 22,
+    paddingTop: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  mainContainer: {
-    flex: 1,
-    padding: 30,
-    paddingTop: 20,
-    borderTopLeftRadius: 46,
-    borderTopRightRadius: 46,
-  },
-  realContainer: {
-    flex: 1,
-    paddingTop: 40,
-  },
-
-  //-------------- Header styling -----------------
-
-  headerText: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 71,
-  },
-
-  headerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  headerImage: {
-    width: 71,
-    height: 71,
-    marginRight: 20,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  welcomeText: {
-    fontSize: 26,
-    fontWeight: "bold",
-    paddingTop: 5,
-  },
-
-  subHeadingText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "gray",
-    fontVariant: ["small-caps"],
-    padding: 10,
-  },
-
-  subHeading2Text: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "gray",
-    fontVariant: ["small-caps"],
-  },
-
-  //-------------- Slider styling -----------------
-
-  sliderSection: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 10,
-    borderRadius: 26,
-    margin: 5,
-    position: "relative",
-    height: 150,
-  },
-
-  sliderLogoContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 10,
-  },
-
-  sliderContainer: {
-    flex: 0.9,
-    maxHeight: 200,
-  },
-
-  //-------------- Back styling -----------------
-
-  backLabelContainerUp: {
-    backgroundColor: "#4BB543",
-    borderRadius: 26,
-  },
-
-  backLabelContainerDown: {
-    backgroundColor: "#ff4545",
-    borderRadius: 26,
-  },
-
-  backLabel: {
-    color: "black",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    fontSize: 11,
-  },
-
-  backLabelWhite: {
-    color: "white",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    fontSize: 11,
-  },
-
-  //-------------- Transaction Preview Section styling -----------------
-
-  transactionSection: {
-    padding: "1%",
-    flexDirection: "row",
-    justifyContent: "space-evenly",
-  },
-
-  pointAmounts: {
-    width: 46,
-    height: 46,
-  },
-
-  row: {
-    justifyContent: "space-evenly",
-    borderRadius: 16,
-    alignItems: "center",
-    marginHorizontal: "5%",
-    marginBottom: 10,
-    marginVertical: "5%",
-    minHeight: 150,
-    minWidth: "30%",
-  },
-
-  shadowProp: {
-    shadowColor: "#171717",
-    shadowOffset: { width: -2, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
-  },
-
-  transactionContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  transactionPreviewText: {
-    fontSize: 30,
-    paddingTop: 10,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  transactionRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  transactionText: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-
-  cardWrapper: {
-    alignItems: "center",
-    marginTop: 20,
-  },
-  blackCard: {
-    backgroundColor: "#1E1E1E",
-    width: width * 0.8,
-    height: 150,
-    borderRadius: 12,
-    position: "relative",
-    overflow: "hidden",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  orangeOverlay: {
-    backgroundColor: "#E95F23",
-    width: width * 0.9,
-    height: 70,
-    borderRadius: 12,
-    position: "absolute",
-    top: 120,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.5,
-    shadowRadius: 6,
-    elevation: 8,
-    justifyContent: "space-between",
-    alignItems: "center",
-    flexDirection: "row",
-    paddingHorizontal: 16,
+  roundedTop: {
+    top: 0,
+    right: 0,
+    width: '113%',
+    height: 180,
+    backgroundColor: '#E95F23',
+    borderBottomLeftRadius: 60,
+    paddingLeft: 28,
+    paddingTop: 47
   },
   contentContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    width: "100%",
+    marginTop: 20,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  textContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    flex: 1,
+  header: {
+    fontSize: 36,
+    color: 'white',
+    alignSelf: 'flex-start',
+    fontWeight: 'bold',
+    marginBottom: 10,
   },
-  iconImage: {
-    width: 40,
-    height: 40,
-    marginRight: 8,
-  },
-  primaryText: {
-    color: "#fff",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  secondaryText: {
-    color: "#fff",
-    fontSize: 13,
-    fontWeight: "400",
-    marginLeft: -3,
-  },
-  arrowIcon: {
-    backgroundColor: "#E95F23",
-    height: 30,
-    width: 30,
-    borderRadius: 15,
-    justifyContent: "center",
-    alignItems: "center",
-    marginLeft: 16,
-  },
-  arrowText: {
-    color: "#fff",
-    fontSize: 35,
-    fontWeight: "500",
+  headerSpacing: {
     marginTop: -10,
   },
-  image: {
-    width: "130%",
-    height: "130%",
-    marginTop: -30,
-    marginLeft: -75,
+  input: {
+    width: '100%',
+    height: 48,
+    borderColor: "#a1a09c",
+    borderWidth: 1,
+    marginBottom: 16,
+    paddingHorizontal: 10,
+    paddingTop: 0,
+    borderRadius: 5,
+    fontSize: 16,
   },
-  logoutButton: {
-    backgroundColor: "#E95F23",
-    padding: 15,
-    margin: 20,
-    marginTop: 25,
+  aboutInput: {
+    height: 150,
+    textAlignVertical: 'top',
+    paddingTop: 10,
+    marginBottom: 14,
+    borderColor: "#a1a09c",
+    borderWidth: 1,
+    borderRadius: 5,
+  },
+  inputContainer: {
+    width: '100%',
+    height: 48,
+    borderColor: "#a1a09c",
+    borderWidth: 1,
+    marginBottom: 16,
+    paddingHorizontal: 10,
     borderRadius: 5,
     alignItems: "center",
+    flexDirection: 'row',
   },
-  logoutText: {
-    color: "#FFF",
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    width: '100%',
+  },
+  checkboxLabel: {
+    color: 'black',
     fontSize: 16,
-    fontWeight: "bold",
   },
-  item: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#cccccc",
-  },
-  itemIcon: {
+  checkbox: {
     marginRight: 10,
   },
-  itemText: {
-    flex: 1,
-    fontSize: 17,
-    color: "#000",
-  },
-  promoButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFD700",
-    padding: 15,
-    marginHorizontal: 15,
-    borderRadius: 5,
-    marginTop: 20,
-  },
-  input: {
-    flexDirection: "row",
-    alignItems: "center",
-    width: "95%",
-    height: 40,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#a1a09c",
-    padding: 10,
-    borderRadius: 5,
-    marginLeft: 10,
-  },
-  container: {
-    width: "95%",
-    height: 300,
-    //flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-    backgroundColor: "#fff",
-    marginLeft: 10,
-    borderColor: "#fff",
-  },
   button: {
-    width: 175,
-    height: 40,
-    backgroundColor: "#007bff",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    justifyContent: "center",
-    alignItems: "center",
+    width: '100%',
+    height: 48,
+    backgroundColor: '#E95F23',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 20,
+    marginTop: 28,
   },
   buttonText: {
-    color: "#fff",
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  icon: {
+    textAlign: 'right',
+    marginRight: 2,
+  },
+  pointsText: {
+    fontSize: 16,
+    marginLeft: -1,
+  },
+  infoButton: {
+    justifyContent: 'center',
+    flex: 1,
+    textAlign: 'right',
+    marginRight: 2,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '90%',
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 20,
+  },
+  modalBackButton: {
+    marginRight: 16,
+  },
+  modalTitle: {
     fontSize: 18,
-    marginTop: -3,
+    fontWeight: 'bold',
   },
-  image2: {
-    width: 150,
-    height: 150,
-    marginBottom: 20,
-    borderRadius: 75,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    backgroundColor: "#f0f0f0",
+  updateButton: {
+    width: '100%',
+    padding: 10,
+    backgroundColor: '#E95F23',
+    borderRadius: 5,
+    alignItems: 'center',
   },
-  headerText2: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 20,
+  updateButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
+  modalText: {
+    fontSize: 17,
+    textAlign: 'center',
+  },
+
+
+
 });

@@ -217,7 +217,7 @@ export default function SignUp() {
         <Text style={styles.buttonText}>Sign up</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        onPress={() => router.navigate("/")}
+        onPress={() => router.navigate("/businessInfo")}
         style={styles.loginLink}
       >
         <Text style={styles.loginText}>
@@ -269,12 +269,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 40,
     marginBottom: 10,
-    borderRadius: 5,
+    borderRadius: 20,
   },
   buttonText: {
     color: "white",
-    fontSize: 16,
-    //fontWeight: 'bold',
+    fontSize: 15,
+    fontWeight: 'bold',
   },
   logo: {
     width: 170,
@@ -289,5 +289,6 @@ const styles = StyleSheet.create({
   },
   loginText2: {
     color: "#E95F23",
+    fontWeight: "bold",
   },
 });

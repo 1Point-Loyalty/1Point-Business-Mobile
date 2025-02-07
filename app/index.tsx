@@ -204,6 +204,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
     color: "#E95F23",
     marginBottom: 30,
+    fontWeight: "bold",
   },
   button: {
     backgroundColor: "#E95F23",
@@ -214,6 +215,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   buttonText: {
+    fontSize: 15,
     color: "#FFF",
     fontWeight: "bold",
   },
