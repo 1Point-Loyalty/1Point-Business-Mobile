@@ -29,30 +29,23 @@ export default function TransactionScreen() {
       transactionAmount: 4000,
       transactionLocation: "Shawerma Plus",
       transactionDate: "12/12/2021",
-      transactionCustomerId: "123456789",
+      transactionCustomerId: "123000654",
       transactionStatus: "Pending",
     },
     {
       transactionAmount: 12000,
       transactionLocation: "Shawerma Plus",
       transactionDate: "12/12/2021",
-      transactionCustomerId: "123456789",
+      transactionCustomerId: "123446098",
       transactionStatus: "Complete",
     },
     {
       transactionAmount: 1000,
       transactionLocation: "Shawerma Plus",
       transactionDate: "12/12/2021",
-      transactionCustomerId: "123456789",
+      transactionCustomerId: "1238888888",
       transactionStatus: "Complete",
-    },
-    {
-      transactionAmount: 150000,
-      transactionLocation: "Shawerma Plus",
-      transactionDate: "12/12/2021",
-      transactionCustomerId: "123456789",
-      transactionStatus: "Complete",
-    },
+    }
   ];
 
   type transaction = {
@@ -93,26 +86,27 @@ export default function TransactionScreen() {
       }
 
       const userData = await response.json();
-
+setTimeout(() => {
       if (Array.isArray(userData) && userData.length > 0 && userData[0].merchantID) {
         setMerchantId(userData[0].merchantID);
       } else {
         console.warn("No merchantID found.");
-        //return null;
       }
+    }, 1000);
     } catch (error) {
       console.error("Error fetching merchantId:", error);
-      //return null;
+      //return null
     }
   };
 
   const [transactions, setTransactions] = useState<transaction[]>([]);
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = async (merchantId: string | null) => {
   const user = auth().currentUser;
-  const userId = user?.uid;
+
 
   const token = await user?.getIdToken();
+  
   fetch(`https://admin.1-point.ca/api/getMerchantTransactions/${merchantId}`, {
     method: "GET",
     headers: {
@@ -122,6 +116,9 @@ export default function TransactionScreen() {
   })
   .then((response)=> {
     if (!response.ok) {
+      setTimeout(() => {
+        return response.json();
+      }, 10000);
       throw new Error("Network response was not ok");
     }
     return response.json();
@@ -129,14 +126,16 @@ export default function TransactionScreen() {
   .then((data: any[]) => {
     const currTransactions: transaction[] = data.map((transaction) => {
       return {
-        transactionAmount: transaction.transactionAmount,
-        transactionLocation: transaction.transactionLocation,
-        transactionDate: transaction.transactionDate,
-        transactionCustomerId: transaction.transactionCustomerId,
-        transactionStatus: transaction.transactionStatus,
-        transactionType: transaction.transactionType,
+        transactionAmount: transaction.pointsEquivalent,
+        transactionLocation: transaction.merchant_name,
+        transactionDate: (transaction.createdAt).split('T')[0],
+        transactionCustomerId: transactionArray[transaction].transactionCustomerId, // transaction.transactionCustomerId,
+        transactionStatus: transactionArray[transaction].transactionStatus, // transaction.transactionStatus,
+        transactionType: transaction.type,
       }});
       setTransactions(currTransactions);
+      console.log(transactions);
+      
   })
   .catch((error) => {
     alert(`Error: ${error.message}`);
@@ -146,7 +145,10 @@ export default function TransactionScreen() {
 
   useEffect(() => {
     fetchMerchantId();
-    fetchTransactions();
+    console.log(merchantId);
+    setTimeout(() => {
+    fetchTransactions(merchantId);
+    }, 1000);
   }, []);
 
   // Render the transactions section

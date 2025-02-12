@@ -166,9 +166,7 @@ export default function SignUp() {
       router.navigate("/businessInfo");
     } catch (e: any) {
       const err = e as FirebaseError;
-      alert(
-        "Sign up failed - please check if entered email and password are correct"
-      );
+      alert("Sign in failed: " + err.message);
     }
   };
 
