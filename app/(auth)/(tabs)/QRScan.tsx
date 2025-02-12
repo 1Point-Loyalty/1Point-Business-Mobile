@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Button, StyleSheet } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import auth from "@react-native-firebase/auth";
 import QRInfoLoadingState from "@/components/loadingState/QRInfoLoadingState";
+import { router } from "expo-router";
 
 const QRScan = () => {
   const [permission, requestPermission] = useCameraPermissions();
@@ -112,8 +113,9 @@ const QRScan = () => {
             Math.floor(userInfo.currentPoints / 1000) * 10}
         </Text>
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity style={styles.actionButton} onPress={() => router.navigate("../awardpoints")}>
             <Text style={styles.buttonText}>Award Points</Text>
+
           </TouchableOpacity>
 
           <TouchableOpacity disabled={true} style={styles.actionButton}>
