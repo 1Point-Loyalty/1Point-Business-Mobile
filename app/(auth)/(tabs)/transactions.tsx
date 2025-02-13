@@ -68,8 +68,6 @@ export default function TransactionScreen() {
       }
       const userId = currentUser.uid;
       const token = await currentUser.getIdToken();
-      //const token = ('eyJhbGciOiJSUzI1NiIsImtpZCI6IjhkMjUwZDIyYTkzODVmYzQ4NDJhYTU2YWJhZjUzZmU5NDcxNmVjNTQiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vcG9pbnQtYWRtaW4iLCJhdWQiOiJwb2ludC1hZG1pbiIsImF1dGhfdGltZSI6MTczODkxNzE5OSwidXNlcl9pZCI6Im81dDlxVXBxSGlnTk5mVXpycDdOaDAxd2l6NzIiLCJzdWIiOiJvNXQ5cVVwcUhpZ05OZlV6cnA3TmgwMXdpejcyIiwiaWF0IjoxNzM4OTE3MTk5LCJleHAiOjE3Mzg5MjA3OTksImVtYWlsIjoiYXNodmluZ3Jld2FsMDJAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcmViYXNlIjp7ImlkZW50aXRpZXMiOnsiZW1haWwiOlsiYXNodmluZ3Jld2FsMDJAZ21haWwuY29tIl19LCJzaWduX2luX3Byb3ZpZGVyIjoicGFzc3dvcmQifX0.ADinDhgUtrf3gM2aG2n-QGRFesDVDR6-ek-zHnJkf8OD0QdU4i7MFt39vQXeHRRZHm__exZ3neF_hVaZswnaz_61b3NYx0VB8PIi4HwiwGVPNYAalTsjCYm51uP6H-TrQ-b0d-ZFYIi-6XsjJECdGBt_gVcwYjRFcpmY1Ph6g3lPvYqjNGcPgMQRVyjjGzD2Ehhjt2ogXaErbpGDxolPtFBrktySxZT8pRoyTXWnvJM3d7iE9d9jMkNGuUEHJqCrhdflRyYQOtYUOgx-r6Sp5uBd3_hc5E6Fh4dWd3IaB4MZwOl_hY0rOrF-_AKZk9EFO6ajzLiNOGZwfySoKSQS5w');
-      //const userId = 'tCGeM4IhNberWn2PkujGek7pU8b2'; 
       const apiUrl = `https://admin.1-point.ca/api/getUser/${userId}`;
       const response = await fetch(apiUrl, {
         method: "GET",
@@ -86,70 +84,71 @@ export default function TransactionScreen() {
       }
 
       const userData = await response.json();
-setTimeout(() => {
-      if (Array.isArray(userData) && userData.length > 0 && userData[0].merchantID) {
-        setMerchantId(userData[0].merchantID);
-      } else {
-        console.warn("No merchantID found.");
-      }
-    }, 1000);
+      setTimeout(() => {
+        if (Array.isArray(userData) && userData.length > 0 && userData[0].merchantID) {
+          setMerchantId(userData[0].merchantID);
+        } else {
+          console.warn("No merchantID found.");
+        }
+      }, );
     } catch (error) {
       console.error("Error fetching merchantId:", error);
-      //return null
     }
   };
 
   const [transactions, setTransactions] = useState<transaction[]>([]);
 
   const fetchTransactions = async (merchantId: string | null) => {
-  const user = auth().currentUser;
+    const user = auth().currentUser;
 
+    const token = await user?.getIdToken();
 
-  const token = await user?.getIdToken();
-  
-  fetch(`https://admin.1-point.ca/api/getMerchantTransactions/${merchantId}`, {
-    method: "GET",
-    headers: {
-      contentType: "application/json",
-      Authorization: `Bearer ${token}`,
-  },
-  })
-  .then((response)=> {
-    if (!response.ok) {
-      setTimeout(() => {
+    fetch(`https://admin.1-point.ca/api/getMerchantTransactions/${merchantId}`, {
+      method: "GET",
+      headers: {
+        contentType: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          setTimeout(() => {
+            return response.json();
+          },);
+          throw new Error("Network response was not ok");
+        }
         return response.json();
-      }, 10000);
-      throw new Error("Network response was not ok");
-    }
-    return response.json();
-  })
-  .then((data: any[]) => {
-    const currTransactions: transaction[] = data.map((transaction) => {
-      return {
-        transactionAmount: transaction.pointsEquivalent,
-        transactionLocation: transaction.merchant_name,
-        transactionDate: (transaction.createdAt).split('T')[0],
-        transactionCustomerId: transactionArray[transaction].transactionCustomerId, // transaction.transactionCustomerId,
-        transactionStatus: transactionArray[transaction].transactionStatus, // transaction.transactionStatus,
-        transactionType: transaction.type,
-      }});
-      setTransactions(currTransactions);
-      console.log(transactions);
-      
-  })
-  .catch((error) => {
-    alert(`Error: ${error.message}`);
-    console.error(error);
-  });
+      })
+      .then((data: any[]) => {
+        const currTransactions: transaction[] = data.map((transaction, index) => {
+          return {
+            transactionAmount: transaction.pointsEquivalent,
+            transactionLocation: transaction.merchant_name,
+            transactionDate: (transaction.createdAt).split('T')[0],
+            transactionCustomerId: transactionArray[index % transactionArray.length].transactionCustomerId, // transaction.transactionCustomerId,
+            transactionStatus: transactionArray[index % transactionArray.length].transactionStatus, // transaction.transactionStatus,
+            transactionType: transaction.type,
+          }
+        });
+        setTransactions(currTransactions);
+        console.log(transactions);
+
+      })
+      .catch((error) => {
+        alert(`Error: ${error.message}`);
+        console.error(error);
+      });
   }
 
   useEffect(() => {
     fetchMerchantId();
-    console.log(merchantId);
-    setTimeout(() => {
-    fetchTransactions(merchantId);
-    }, 1000);
   }, []);
+
+  useEffect(() => {
+    if (merchantId) {
+      fetchTransactions(merchantId);
+    }
+  }, [merchantId]);
 
   // Render the transactions section
   const renderTransactionPreview = () => {
@@ -242,7 +241,7 @@ setTimeout(() => {
         {transactions.map((transaction) => {
           return (
             <TransactionRow
-              transactionAmount={transaction.transactionAmount }
+              transactionAmount={transaction.transactionAmount}
               transactionLocation={transaction.transactionLocation}
               transactionDate={transaction.transactionDate}
               transactionCustomerId={transaction.transactionCustomerId}
