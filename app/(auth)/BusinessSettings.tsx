@@ -43,8 +43,6 @@ export default function BusinessSettings() {
       }
       const userId = currentUser.uid;
       const token = await currentUser.getIdToken();
-      //const token = ('eyJhbGciOiJSUzI1NiIsImtpZCI6IjhkMjUwZDIyYTkzODVmYzQ4NDJhYTU2YWJhZjUzZmU5NDcxNmVjNTQiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vcG9pbnQtYWRtaW4iLCJhdWQiOiJwb2ludC1hZG1pbiIsImF1dGhfdGltZSI6MTczODkxNzE5OSwidXNlcl9pZCI6Im81dDlxVXBxSGlnTk5mVXpycDdOaDAxd2l6NzIiLCJzdWIiOiJvNXQ5cVVwcUhpZ05OZlV6cnA3TmgwMXdpejcyIiwiaWF0IjoxNzM4OTE3MTk5LCJleHAiOjE3Mzg5MjA3OTksImVtYWlsIjoiYXNodmluZ3Jld2FsMDJAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcmViYXNlIjp7ImlkZW50aXRpZXMiOnsiZW1haWwiOlsiYXNodmluZ3Jld2FsMDJAZ21haWwuY29tIl19LCJzaWduX2luX3Byb3ZpZGVyIjoicGFzc3dvcmQifX0.ADinDhgUtrf3gM2aG2n-QGRFesDVDR6-ek-zHnJkf8OD0QdU4i7MFt39vQXeHRRZHm__exZ3neF_hVaZswnaz_61b3NYx0VB8PIi4HwiwGVPNYAalTsjCYm51uP6H-TrQ-b0d-ZFYIi-6XsjJECdGBt_gVcwYjRFcpmY1Ph6g3lPvYqjNGcPgMQRVyjjGzD2Ehhjt2ogXaErbpGDxolPtFBrktySxZT8pRoyTXWnvJM3d7iE9d9jMkNGuUEHJqCrhdflRyYQOtYUOgx-r6Sp5uBd3_hc5E6Fh4dWd3IaB4MZwOl_hY0rOrF-_AKZk9EFO6ajzLiNOGZwfySoKSQS5w');
-      //const userId = 'tCGeM4IhNberWn2PkujGek7pU8b2'; 
       const apiUrl = `https://admin.1-point.ca/api/getUser/${userId}`;
       const response = await fetch(apiUrl, {
         method: "GET",
@@ -66,11 +64,9 @@ export default function BusinessSettings() {
         setMerchantId(userData[0].merchantID);
       } else {
         console.warn("No merchantID found.");
-        //return null;
       }
     } catch (error) {
       console.error("Error fetching merchantId:", error);
-      //return null;
     }
   };
 
@@ -82,7 +78,6 @@ export default function BusinessSettings() {
         return;
       }
       const token = await currentUser.getIdToken();
-      //const token = ('eyJhbGciOiJSUzI1NiIsImtpZCI6IjhkMjUwZDIyYTkzODVmYzQ4NDJhYTU2YWJhZjUzZmU5NDcxNmVjNTQiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vcG9pbnQtYWRtaW4iLCJhdWQiOiJwb2ludC1hZG1pbiIsImF1dGhfdGltZSI6MTczODkxNzE5OSwidXNlcl9pZCI6Im81dDlxVXBxSGlnTk5mVXpycDdOaDAxd2l6NzIiLCJzdWIiOiJvNXQ5cVVwcUhpZ05OZlV6cnA3TmgwMXdpejcyIiwiaWF0IjoxNzM4OTE3MTk5LCJleHAiOjE3Mzg5MjA3OTksImVtYWlsIjoiYXNodmluZ3Jld2FsMDJAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcmViYXNlIjp7ImlkZW50aXRpZXMiOnsiZW1haWwiOlsiYXNodmluZ3Jld2FsMDJAZ21haWwuY29tIl19LCJzaWduX2luX3Byb3ZpZGVyIjoicGFzc3dvcmQifX0.ADinDhgUtrf3gM2aG2n-QGRFesDVDR6-ek-zHnJkf8OD0QdU4i7MFt39vQXeHRRZHm__exZ3neF_hVaZswnaz_61b3NYx0VB8PIi4HwiwGVPNYAalTsjCYm51uP6H-TrQ-b0d-ZFYIi-6XsjJECdGBt_gVcwYjRFcpmY1Ph6g3lPvYqjNGcPgMQRVyjjGzD2Ehhjt2ogXaErbpGDxolPtFBrktySxZT8pRoyTXWnvJM3d7iE9d9jMkNGuUEHJqCrhdflRyYQOtYUOgx-r6Sp5uBd3_hc5E6Fh4dWd3IaB4MZwOl_hY0rOrF-_AKZk9EFO6ajzLiNOGZwfySoKSQS5w');
 
       const apiURL2 = `https://admin.1-point.ca/api/getMerchant/${merchantId}`;
       const response = await fetch(apiURL2, {
