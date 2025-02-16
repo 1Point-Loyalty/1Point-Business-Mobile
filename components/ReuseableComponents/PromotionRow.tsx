@@ -35,7 +35,7 @@ export const PromotionRow = ({
         source={
           promotionImage === "cake"
             ? require("@/assets/images/cake.png")
-            : require("@/assets/images/icecream.png")
+            : require("@/assets/images/Icecream.png")
         }
         style={styles.image}
       />

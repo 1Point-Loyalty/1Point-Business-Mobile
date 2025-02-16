@@ -1,17 +1,101 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, TextInput, Text, TouchableOpacity, ScrollView, Modal } from 'react-native';
-import { router, useNavigation } from "expo-router";
+import { useRouter, useNavigation } from "expo-router";
 //import Icon from 'react-native-vector-icons/MaterialIcons';
 import Icon from 'react-native-vector-icons/Ionicons';
-import CheckBox from '@react-native-community/checkbox';
+import CheckBox from "expo-checkbox";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import PhoneInput from "react-native-phone-input";
+import auth from "@react-native-firebase/auth";
 
 export default function Register() {
+
+  const router = useRouter();
 
   const [isChecked, setIsChecked] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const [currentItem, setCurrentItem] = useState('');
   const [tempValue, setTempValue] = useState('');
+
+  const [name, setName] = useState("");
+  const [address, setAddress] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [website, setWebsite] = useState("");
+  const [about, setAbout] = useState("");
+
+  const countriesList = [
+    {
+      name: "Canada",
+      iso2: "ca",
+      dialCode: "1",
+      priority: 0,
+      areaCodes: null,
+    },
+  ];
+
+  const handleCreateMerchant = async () => {
+      const user = auth().currentUser;
+      const userId = user?.uid;
+      const token = await user?.getIdToken(); // Retrieve the token from storage
+
+      if (!token) {
+        alert("Error, No authentication token found");
+        return;
+      };
+
+      const response = await fetch(
+        `https://admin.1-point.ca/api/createMerchant/${userId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            "name": name,
+            "address": address,
+            "phoneNumber": phoneNumber,
+            "website": website,
+            "bio": about,
+            "logoURL": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTz2jjI7PGWC5jMcHZ6pExeKekMo3LZ1ImU9g&s"
+          }),
+        }
+      );
+
+      console.log(response)
+
+      if (response.ok) {
+        const result = await response.json();
+        alert("Success, Merchant created successfully");
+        router.navigate("/home")
+      } else {
+        const error = await response.text();
+        console.log(error)
+        alert(error);
+      }
+  }
+
+  // Function to validate phone number input
+  const handlePhoneNumberChange = (number: string) => {
+    const phonePattern = /^\d{3}-\d{3}-\d{4}$/;
+    setPhoneNumber(number);
+    const formattedNumber = formatPhoneNumber(number);
+    setPhoneNumber(formattedNumber);
+  };
+
+  // Function to format phone number input
+  const formatPhoneNumber = (number: string) => {
+    // Remove all non-digit characters
+    const cleaned = ("" + number).replace(/\D/g, "");
+    // Limit to 10 digits
+    const limited = cleaned.substring(0, 10);
+    // Format the number with hyphens
+    const match = limited.match(/^(\d{3})(\d{3})(\d{4})$/);
+    if (match) {
+      return `${match[1]}-${match[2]}-${match[3]}`;
+    }
+    return limited;
+  };
 
   const openModal = (item: string) => {
     setCurrentItem(item);
@@ -41,26 +125,35 @@ export default function Register() {
           placeholder="Business Name"
           placeholderTextColor={'black'}
           style={styles.input}
+          onChangeText={setName}
         />
         <TextInput
           placeholder="Address"
           placeholderTextColor={'black'}
           style={styles.input}
+          onChangeText={setAddress}
         />
-        <TextInput
-          placeholder="Phone Number"
-          placeholderTextColor={'black'}
+        <PhoneInput
+          initialCountry="ca"
+          countriesList={countriesList}
+          textProps={{
+            placeholder: "Phone Number",
+            value: phoneNumber,
+            onChangeText: handlePhoneNumberChange,
+          }}
           style={styles.input}
         />
         <TextInput
           placeholder="Website"
           placeholderTextColor={'black'}
           style={styles.input}
+          onChangeText={setWebsite}
         />
         <TextInput
           placeholder="About Your Business"
           placeholderTextColor={'black'}
           style={[styles.input, styles.aboutInput]}
+          onChangeText={setAbout}
         />
         <TextInput
           placeholder="Logo URL"
@@ -88,14 +181,13 @@ export default function Register() {
           <CheckBox
             value={isChecked}
             onValueChange={setIsChecked}
-            tintColors={{ true: '#E95F23', false: 'b#a1a09c' }}
             style={styles.checkbox}
           />
           <Text style={styles.checkboxLabel}>Agree to terms and conditions</Text>
         </View>
         <TouchableOpacity
           style={styles.button}
-          onPress={() => router.navigate("/home")}
+          onPress={() => handleCreateMerchant()}
         >
           <Text style={styles.buttonText}>Submit</Text>
         </TouchableOpacity>
