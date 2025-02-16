@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, ScrollView, View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, Button } from 'react-native';
+import { SafeAreaView, ScrollView, View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, Button, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from "expo-router";
 import auth from '@react-native-firebase/auth';
@@ -12,6 +12,7 @@ export default function BusinessSettings() {
   const [currentItem, setCurrentItem] = useState('');
   const [tempValue, setTempValue] = useState('');
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   type UserInfo = {
@@ -20,6 +21,10 @@ export default function BusinessSettings() {
     email: string;
     phoneNumber: string;
   };
+
+  useEffect(() => {
+    fetchUserInfo();
+  }, []);
 
   const fetchUserInfo = async () => {
     try {
@@ -30,6 +35,7 @@ export default function BusinessSettings() {
       }
 
       const userId = currentUser.uid;
+      setUserId(userId);
 
       const apiURL = `https://admin.1-point.ca/api/getUser/${userId}`;
 
@@ -57,19 +63,80 @@ export default function BusinessSettings() {
         console.error("API returned an empty array or invalid data:", data);
       }
     } catch (error) {
-        console.error("Error fetching user data:", error);
+      console.error("Error fetching user data:", error);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchUserInfo();
-  }, []);
+  const updateUserInfo = async () => {
+    if (!userInfo) {
+      console.error("User info is missing");
+      return;
+    }
+
+    let updatedUserInfo: Partial<UserInfo> = {};
+
+    if (currentItem === "Full Name") {
+      const [firstName, lastName] = tempValue.split(" ");
+      updatedUserInfo.firstName = firstName || userInfo.firstName;
+      updatedUserInfo.lastName = lastName || userInfo.lastName;
+    } else if (currentItem === "Phone Number") {
+      updatedUserInfo.phoneNumber = tempValue || userInfo.phoneNumber;
+    } else if (currentItem === "Email") {
+      updatedUserInfo.email = tempValue || userInfo.email;
+    }
+
+    const userInfoBody = {
+      firstName: updatedUserInfo.firstName || userInfo.firstName,
+      lastName: updatedUserInfo.lastName || userInfo.lastName,
+      email: updatedUserInfo.email || userInfo.email,
+      phoneNumber: updatedUserInfo.phoneNumber || userInfo.phoneNumber
+    };
+
+    try {
+      const currentUser = auth().currentUser;
+      if (!currentUser) {
+        console.error("User not authenticated");
+        return;
+      }
+
+      const token = await currentUser.getIdToken();
+
+      const apiURL = `https://admin.1-point.ca/api/editUser/${userId}`;
+
+      const response = await fetch(apiURL, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userInfoBody),
+      });
+
+      const responseText = await response.text();
+      if (!response.ok) {
+        console.error(`API Error: ${response.status} - ${responseText}`);
+        Alert.alert("Error", responseText || "Failed to update profile.");
+        return;
+      }
+
+      setUserInfo(prev => ({ ...prev!, ...userInfoBody }));
+      setModalVisible(false);
+      Alert.alert("Success", `${currentItem} has been updated.`);
+    } catch (error) {
+      console.error("Error updating user info:", error);
+      Alert.alert("Error", "Failed to update profile. Please try again.");
+    }
+  };
 
   const openModal = (item: string) => {
     setCurrentItem(item);
-    setTempValue('');
+    setTempValue(
+      item == "Full Name" ? `${userInfo?.firstName} ${userInfo?.lastName}` :
+        item == "Phone Number" ? userInfo?.phoneNumber || '' :
+          item == "Email" ? userInfo?.email || '' : ''
+    );
     setModalVisible(true);
   };
 
@@ -135,7 +202,7 @@ export default function BusinessSettings() {
               <Text style={styles.modalTitle}>Edit {currentItem}</Text>
             </View>
             {renderModalContent()}
-            <TouchableOpacity style={styles.updateButton} onPress={() => setModalVisible(false)}>
+            <TouchableOpacity style={styles.updateButton} onPress={updateUserInfo}>
               <Text style={styles.updateButtonText}>Update</Text>
             </TouchableOpacity>
           </View>
