@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SafeAreaView, ScrollView, View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, Button } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from "expo-router";
+import auth from '@react-native-firebase/auth';
 
 export default function BusinessSettings() {
   const navigation = useNavigation();
@@ -9,11 +10,62 @@ export default function BusinessSettings() {
 
   const [isModalVisible, setModalVisible] = useState(false);
   const [currentItem, setCurrentItem] = useState('');
-  const [fullName, setFullName] = useState('HJ Kwon');
-  const [PhoneNumber, setPhoneNumber] = useState('519 888 4567');
-  const [email, setEmail] = useState('hjkwon@uwaterloo.ca');
-
   const [tempValue, setTempValue] = useState('');
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  type UserInfo = {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+  };
+
+  const fetchUserInfo = async () => {
+    try {
+      const currentUser = auth().currentUser;
+      if (!currentUser) {
+        console.error("User not authenticated");
+        return;
+      }
+
+      const userId = currentUser.uid;
+
+      const apiURL = `https://admin.1-point.ca/api/getUser/${userId}`;
+
+      const token = await currentUser.getIdToken();
+
+      const response = await fetch(apiURL, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`API Error: ${response.status} - ${errorText}`);
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+
+      if (Array.isArray(data) && data.length > 0) {
+        setUserInfo(data[0]);
+      } else {
+        console.error("API returned an empty array or invalid data:", data);
+      }
+    } catch (error) {
+        console.error("Error fetching user data:", error);
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserInfo();
+  }, []);
 
   const openModal = (item: string) => {
     setCurrentItem(item);
@@ -48,21 +100,21 @@ export default function BusinessSettings() {
         <TouchableOpacity style={styles.item} onPress={() => openModal('Full Name')}>
           <View style={styles.textContainer}>
             <Text style={styles.text}>Full Name</Text>
-            <Text style={styles.subText}>{fullName}</Text>
+            <Text style={styles.subText}>{userInfo?.firstName} {userInfo?.lastName}</Text>
           </View>
           <Icon name="chevron-forward-outline" size={20} color="grey" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.item} onPress={() => openModal('Phone Number')}>
           <View style={styles.textContainer}>
             <Text style={styles.text}>Phone Number</Text>
-            <Text style={styles.subText}>{PhoneNumber}</Text>
+            <Text style={styles.subText}>{userInfo?.phoneNumber}</Text>
           </View>
           <Icon name="chevron-forward-outline" size={20} color="grey" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.item} onPress={() => openModal('Email')}>
           <View style={styles.textContainer}>
             <Text style={styles.text}>Email</Text>
-            <Text style={styles.subText}>{email}</Text>
+            <Text style={styles.subText}>{userInfo?.email}</Text>
           </View>
           <Icon name="chevron-forward-outline" size={20} color="grey" />
         </TouchableOpacity>
@@ -176,7 +228,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   input: {
-    width: '100%', 
+    width: '100%',
     height: 40,
     borderColor: '#ccc',
     borderWidth: 1,

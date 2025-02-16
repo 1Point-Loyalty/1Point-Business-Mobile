@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SafeAreaView, ScrollView, View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, Button } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from "expo-router";
+import auth from '@react-native-firebase/auth';
 
 export default function BusinessSettings() {
   const navigation = useNavigation();
@@ -9,14 +10,65 @@ export default function BusinessSettings() {
 
   const [isModalVisible, setModalVisible] = useState(false);
   const [currentItem, setCurrentItem] = useState('');
-  const [businessName, setBusinessName] = useState('Shinwa Inc.');
-  const [address, setAddress] = useState('160 University Ave W, Waterloo ON');
-  const [phoneNumber, setPhoneNumber] = useState('123 123 1234');
-  const [website, setWebsite] = useState('WWW.Shinwa.ca');
-  const [about, setAbout] = useState('Food...');
-  const [logoUrl, setLogoUrl] = useState('Shinwa...');
-
   const [tempValue, setTempValue] = useState('');
+  const [merchantInfo, setMerchantInfo] = useState<MerchantInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  type MerchantInfo = {
+    name: string;
+    phoneNumber: string;
+    address: string;
+    website: string;
+    bio: string;
+    logoURL: string;
+  };
+
+  useEffect(() => {
+    fetchMerchantInfo();
+  }, []);
+
+  const fetchMerchantInfo = async () => {
+    try {
+      const currentUser = auth().currentUser;
+      if (!currentUser) {
+        console.error("User not authenticated");
+        return;
+      }
+      const userId = currentUser.uid;
+      console.log(userId);
+      const token = await currentUser.getIdToken();
+      console.log(token);
+
+      const apiURL = `https://admin.1-point.ca/api/getMerchant/${userId}`;
+      const response = await fetch(apiURL, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`API Error: ${response.status} - ${errorText}`);
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+
+      if (Array.isArray(data) && data.length > 0) {
+        setMerchantInfo(data[0]);
+      } else if (typeof data === "object" && data !== null) {
+        setMerchantInfo(data);
+      } else {
+        console.error("Unexpected API response format:", data);
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const openModal = (item: string) => {
     setCurrentItem(item);
@@ -51,42 +103,42 @@ export default function BusinessSettings() {
         <TouchableOpacity style={styles.item} onPress={() => openModal('Business Name')}>
           <View style={styles.textContainer}>
             <Text style={styles.text}>Business Name</Text>
-            <Text style={styles.subText}>{businessName}</Text>
+            <Text style={styles.subText}>{merchantInfo?.name}</Text>
           </View>
           <Icon name="chevron-forward-outline" size={20} color="grey" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.item} onPress={() => openModal('Address')}>
           <View style={styles.textContainer}>
             <Text style={styles.text}>Address</Text>
-            <Text style={styles.subText}>{address}</Text>
+            <Text style={styles.subText}>{merchantInfo?.address}</Text>
           </View>
           <Icon name="chevron-forward-outline" size={20} color="grey" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.item} onPress={() => openModal('Phone Number')}>
           <View style={styles.textContainer}>
             <Text style={styles.text}>Phone Number</Text>
-            <Text style={styles.subText}>{phoneNumber}</Text>
+            <Text style={styles.subText}>{merchantInfo?.phoneNumber}</Text>
           </View>
           <Icon name="chevron-forward-outline" size={20} color="grey" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.item} onPress={() => openModal('Website')}>
           <View style={styles.textContainer}>
             <Text style={styles.text}>Website</Text>
-            <Text style={styles.subText}>{website}</Text>
+            <Text style={styles.subText}>{merchantInfo?.website}</Text>
           </View>
           <Icon name="chevron-forward-outline" size={20} color="grey" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.item} onPress={() => openModal('About Your Business')}>
           <View style={styles.textContainer}>
             <Text style={styles.text}>About Your Business</Text>
-            <Text style={styles.subText}>{about}</Text>
+            <Text style={styles.subText}>{merchantInfo?.bio}</Text>
           </View>
           <Icon name="chevron-forward-outline" size={20} color="grey" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.item} onPress={() => openModal('Logo URL')}>
           <View style={styles.textContainer}>
             <Text style={styles.text}>Logo URL</Text>
-            <Text style={styles.subText}>{logoUrl}</Text>
+            <Text style={styles.subText}>{merchantInfo?.logoURL}</Text>
           </View>
           <Icon name="chevron-forward-outline" size={20} color="grey" />
         </TouchableOpacity>
