@@ -83,9 +83,7 @@ export default function Login() {
       await auth().signInWithEmailAndPassword(email, password);
     } catch (e: any) {
       const err = e as FirebaseError;
-      alert(
-        "Sign up failed - please check if entered email and password are correct"
-      );
+      alert("Sign in failed: " + err.message);
       console.log(err.message);
       return;
     }
