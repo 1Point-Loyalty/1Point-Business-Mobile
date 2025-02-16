@@ -43,9 +43,7 @@ const RootLayoutContent = () => {
   useEffect(() => {
     if (initializing) return;
     const inAuthGroup = segments[0] === "(auth)";
-    if (user && !inAuthGroup && segments[0] === "signUp") {
-      router.replace("/(auth)/businessInfo");
-    } else if (user && !inAuthGroup) {
+    if (user && !inAuthGroup) {
       router.replace("/(auth)/home");
     } else if (!user && inAuthGroup) {
       router.replace("/");

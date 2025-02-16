@@ -163,56 +163,12 @@ export default function SignUp() {
 
     try {
       await auth().createUserWithEmailAndPassword(email, password);
-      handleCreateUser()
+      router.navigate("/businessInfo");
     } catch (e: any) {
       const err = e as FirebaseError;
       alert("Sign in failed: " + err.message);
     }
   };
-
-  const handleCreateUser = async () => {
-    const user = auth().currentUser;
-    const userId = user?.uid;
-    const token = await user?.getIdToken(); // Retrieve the token from storage
-    if (!token) {
-      alert("Error, No authentication token found");
-      return;
-    };
-
-    var first = fullName.split(" ")[0]
-    var last = fullName.split(" ")[1]
-
-    const response = await fetch(
-      `https://admin.1-point.ca/api/createUser/${userId}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          "firstName": first,
-          "lastName": last,
-          "email": email,
-          "phoneNumber": phoneNumber,
-          "isBO": 0,
-        }),
-      }
-    );
-    
-    const result = await response.json();
-    console.log(result)
-    if (response.ok) {
-      console.log("//// OK")
-      const result = await response.json();
-      alert("Success, User created successfully");
-    } else {
-      console.log("//// Failed")
-      const error = await response.text();
-      alert(error);
-      console.log(error)
-    }
-  }
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.card }]}>
@@ -261,7 +217,7 @@ export default function SignUp() {
         <Text style={styles.buttonText}>Sign up</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        onPress={() => router.navigate("/")}
+        onPress={() => router.navigate("/businessInfo")}
         style={styles.loginLink}
       >
         <Text style={styles.loginText}>
