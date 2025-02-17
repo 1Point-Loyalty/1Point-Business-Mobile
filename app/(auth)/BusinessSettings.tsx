@@ -12,7 +12,6 @@ export default function BusinessSettings() {
   const [currentItem, setCurrentItem] = useState('');
   const [tempValue, setTempValue] = useState('');
   const [merchantInfo, setMerchantInfo] = useState<MerchantInfo | null>(null);
-  const [merchantId, setMerchantId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   type MerchantInfo = {
@@ -25,16 +24,10 @@ export default function BusinessSettings() {
   };
 
   useEffect(() => {
-    fetchMerchantId();
+    fetchMerchantInfo();
   }, []);
 
-  useEffect(() => {
-    if (merchantId) {
-      fetchMerchantInfo(merchantId);
-    }
-  }, [merchantId]);
-
-  const fetchMerchantId = async () => {
+  const fetchMerchantInfo = async () => {
     try {
       const currentUser = auth().currentUser;
       if (!currentUser) {
@@ -42,45 +35,12 @@ export default function BusinessSettings() {
         return;
       }
       const userId = currentUser.uid;
+      console.log(userId);
       const token = await currentUser.getIdToken();
-      const apiUrl = `https://admin.1-point.ca/api/getUser/${userId}`;
-      const response = await fetch(apiUrl, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      console.log(token);
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`API Error: ${response.status} - ${errorText}`);
-        throw new Error(`API Error: ${response.status} - ${errorText}`);
-      }
-
-      const userData = await response.json();
-
-      if (Array.isArray(userData) && userData.length > 0 && userData[0].merchantID) {
-        setMerchantId(userData[0].merchantID);
-      } else {
-        console.warn("No merchantID found.");
-      }
-    } catch (error) {
-      console.error("Error fetching merchantId:", error);
-    }
-  };
-
-  const fetchMerchantInfo = async (merchantId: string) => {
-    try {
-      const currentUser = auth().currentUser;
-      if (!currentUser) {
-        console.error("User not authenticated");
-        return;
-      }
-      const token = await currentUser.getIdToken();
-
-      const apiURL2 = `https://admin.1-point.ca/api/getMerchant/${merchantId}`;
-      const response = await fetch(apiURL2, {
+      const apiURL = `https://admin.1-point.ca/api/getMerchant/${userId}`;
+      const response = await fetch(apiURL, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -112,7 +72,15 @@ export default function BusinessSettings() {
 
   const openModal = (item: string) => {
     setCurrentItem(item);
-    setTempValue('');
+    setTempValue(
+      item == "Business Name" ? `${merchantInfo?.name}` :
+      item == "Address" ? `${merchantInfo?.address}` :
+      item == "Phone Number" ? `${merchantInfo?.phoneNumber}` :
+      item == "Website" ? `${merchantInfo?.website}` :
+      item == "About Your Business" ? `${merchantInfo?.bio}` :
+      item == "Logo URL" ? `${merchantInfo?.logoURL}` :
+      ''
+    );
     setModalVisible(true);
   };
 
