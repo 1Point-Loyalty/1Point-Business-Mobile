@@ -5,12 +5,9 @@ import auth from "@react-native-firebase/auth";
 import QRInfoLoadingState from "@/components/loadingState/QRInfoLoadingState";
 import { router } from "expo-router";
 
-const QRScan = () => {
-  const [permission, requestPermission] = useCameraPermissions();
-  const [showQRCode, setShowQRCode] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
-  interface UserInfo {
+
+  export interface UserInfo {
     createdAt: string;
     currentPoints: number;
     email: string;
@@ -26,6 +23,10 @@ const QRScan = () => {
     updatedAt: string;
   }
 
+  const QRScan = () => {
+    const [permission, requestPermission] = useCameraPermissions();
+    const [showQRCode, setShowQRCode] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
 
   ///////////////////////////////////////////////////////////////////////////////////////////////

@@ -10,64 +10,128 @@ import {
   useColorScheme,
   TouchableOpacity,
   TextInput,
+  Alert,
 } from "react-native";
 import PagerThemedView from "react-native-pager-view";
 import { useTheme } from "@/constants/ThemeCheck";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import auth from "@react-native-firebase/auth";
+import { UserInfo } from "@/app/(auth)/(tabs)/QRScan";
 
 export default function AwardPoints() {
-  const theme = useTheme(); 
-  const [points, setPoints] = useState('0');
-  
- const renderPointPreview = () => {
-       return (
-         <ThemedView style={[styles.PromotionSection, {backgroundColor: theme.colors.background}]}>
-        
- <ThemedView style={{ backgroundColor: theme.colors.background }}>
-             <ThemedView style={[styles.row, styles.shadowProp, { backgroundColor: theme.colors.notification }]}>
-                 <View style={styles.imageContainer}>
-                <ThemedText style={styles.awardText}>You are awarding</ThemedText>        
-                <ThemedText style={styles.pointText}>{Math.round(Number(points))}</ThemedText>
-                <ThemedText style={styles.awardText}>points to your customer</ThemedText>
-                <ThemedText style={styles.awardText2}>${points} to {Math.round(Number(points))} points</ThemedText>       
-                </View>
-             </ThemedView>
-             
-         </ThemedView>
-           
-         </ThemedView>
-       );
-     };
+  const theme = useTheme();
+  const [loading, setLoading] = useState(true);
+  const [subtotal, setSubtotal] = useState('0');
+  const [userInfo] = useState<UserInfo | null>(null);
 
-     const NumericInput = () => {
-      return (
-        <View style={{ backgroundColor: theme.colors.background }}>
-              <TextInput
-                style={[styles.circularInput, { backgroundColor: theme.colors.card }]}
-                placeholder="Enter Points"
-                placeholderTextColor="lightgray"
-                keyboardType='decimal-pad'
-                value={points}
-                onChangeText={setPoints}
-              />
-         
+  const createTransaction = async () => {
+    if (!subtotal) {
+      Alert.alert("Error", "Please enter a subtotal.");
+      return;
+    }
 
-<View style={styles.buttonContainer}>
-            <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={() => router.navigate("/catalog")}>
-              <ThemedText style={styles.buttonText2}>Cancel</ThemedText>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.button, styles.saveButton]} onPress={() => {/* Add save logic here */}}>
-              <ThemedText style={styles.buttonText}>Award Points</ThemedText>
-            </TouchableOpacity>
-          </View>
-      
+    const customerId = userInfo?.id;
+    const pointsEquivalent = Math.round(Number(subtotal));
 
-        </View>
-      );
+    const transactionData = {
+      customerID: customerId,
+      subtotal: subtotal.toString(),
+      pointsEquivalent: pointsEquivalent.toString(),
     };
 
- 
+    try {
+      setLoading(true);
+
+      const token = await auth().currentUser?.getIdToken(true);
+      if (!token) {
+        Alert.alert("Error", "Authentication failed. Please log in again.");
+        return;
+      }
+
+      const currentUser = auth().currentUser;
+      if (!currentUser) {
+        console.error("User not authenticated");
+        return;
+      }
+
+      const userId = currentUser.uid;
+      const apiURL = `https://admin.1-point.ca/api/createMerchantTransaction/${userId}`;
+      const response = await fetch(apiURL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(transactionData),
+      });
+
+      const responseText = await response.text();
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status} - ${responseText}`);
+      }
+
+      Alert.alert("Success", "Transaction successfully recorded.");
+      setSubtotal("0");
+
+    } catch (error) {
+      Alert.alert("Error", "Failed to post transaction. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  const renderPointPreview = () => {
+
+    const points = Math.round(Number(subtotal));
+
+    return (
+      <ThemedView style={[styles.PromotionSection, { backgroundColor: theme.colors.background }]}>
+
+        <ThemedView style={{ backgroundColor: theme.colors.background }}>
+          <ThemedView style={[styles.row, styles.shadowProp, { backgroundColor: theme.colors.notification }]}>
+            <View style={styles.imageContainer}>
+              <ThemedText style={styles.awardText}>You are awarding</ThemedText>
+              <ThemedText style={styles.pointText}>{points}</ThemedText>
+              <ThemedText style={styles.awardText}>points to your customer</ThemedText>
+              <ThemedText style={styles.awardText2}>${subtotal} to {points} points</ThemedText>
+            </View>
+          </ThemedView>
+        </ThemedView>
+      </ThemedView>
+    );
+  };
+
+  const NumericInput = () => {
+    return (
+      <View style={{ backgroundColor: theme.colors.background }}>
+        <TextInput
+          style={[styles.circularInput, { backgroundColor: theme.colors.card }]}
+          placeholder="Enter Amount"
+          placeholderTextColor="lightgray"
+          keyboardType='decimal-pad'
+          value={subtotal}
+          onChangeText={setSubtotal}
+        />
+
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={[styles.button, styles.cancelButton]}
+            onPress={() => router.navigate("/home")}>
+            <ThemedText style={styles.buttonText2}>Cancel</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.button, styles.saveButton]}
+            onPress={async () => {
+              await createTransaction();
+              router.navigate("/home");
+            }}>
+            <ThemedText style={styles.buttonText}>Award Points</ThemedText>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={[styles.main, { backgroundColor: theme.colors.card }]}>
       <ThemedView
@@ -79,9 +143,9 @@ export default function AwardPoints() {
             { backgroundColor: theme.colors.card },
           ]}
         >
-          <TouchableOpacity style={styles.headerImage} onPress={() => router.navigate("/catalog")}>
-                <Ionicons name="arrow-back" size={30} color="black" />
-            </TouchableOpacity>
+          <TouchableOpacity style={styles.headerImage} onPress={() => router.navigate("/QRScan")}>
+            <Ionicons name="arrow-back" size={30} color="black" />
+          </TouchableOpacity>
           <ThemedView
             style={[styles.headerText, { backgroundColor: theme.colors.card }]}
           >
@@ -96,7 +160,6 @@ export default function AwardPoints() {
         >
 
           {renderPointPreview()}
-          
 
           <ThemedText
             style={[
@@ -115,20 +178,20 @@ export default function AwardPoints() {
 }
 
 const styles = StyleSheet.create({
-    numericButton: {
-        marginTop: 10,
-        padding: 10,
-        backgroundColor: 'green',
-        borderRadius: 5,
-      },
-    editButton: {
+  numericButton: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: 'green',
+    borderRadius: 5,
+  },
+  editButton: {
     position: 'absolute',
     top: 10,
     right: 10,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
     borderRadius: 15,
     padding: 5,
-},
+  },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -162,12 +225,12 @@ const styles = StyleSheet.create({
   circularInput: {
     height: 60,
     borderRadius: 30,
-   
+
     textAlign: 'center',
     marginVertical: 10,
     fontSize: 20,
   },
- 
+
   //-------------- Main App styling -----------------
   main: {
     flex: 1,
@@ -224,7 +287,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     width: 325,
     alignSelf: 'center',
-},
+  },
 
   welcomeText: {
     fontSize: 26,
