@@ -12,8 +12,9 @@ import {
 } from "react-native";
 import { useTheme } from "@/constants/ThemeCheck";
 import { TransactionRow } from "@/components/ReuseableComponents/TransactionRow";
+import auth from "@react-native-firebase/auth"
 
-export default function HomeScreen() {
+export default function TransactionScreen() {
   const theme = useTheme();
 
   const transactionArray = [
@@ -28,31 +29,126 @@ export default function HomeScreen() {
       transactionAmount: 4000,
       transactionLocation: "Shawerma Plus",
       transactionDate: "12/12/2021",
-      transactionCustomerId: "123456789",
+      transactionCustomerId: "123000654",
       transactionStatus: "Pending",
     },
     {
       transactionAmount: 12000,
       transactionLocation: "Shawerma Plus",
       transactionDate: "12/12/2021",
-      transactionCustomerId: "123456789",
+      transactionCustomerId: "123446098",
       transactionStatus: "Complete",
     },
     {
       transactionAmount: 1000,
       transactionLocation: "Shawerma Plus",
       transactionDate: "12/12/2021",
-      transactionCustomerId: "123456789",
+      transactionCustomerId: "1238888888",
       transactionStatus: "Complete",
-    },
-    {
-      transactionAmount: 150000,
-      transactionLocation: "Shawerma Plus",
-      transactionDate: "12/12/2021",
-      transactionCustomerId: "123456789",
-      transactionStatus: "Complete",
-    },
+    }
   ];
+
+  type transaction = {
+    transactionAmount: number;
+    transactionLocation: string;
+    transactionDate: string;
+    transactionCustomerId: string;
+    transactionStatus: string;
+    transactionType: string;
+  };
+
+  const [merchantId, setMerchantId] = useState<string | null>(null);
+
+  const fetchMerchantId = async () => {
+    try {
+      const currentUser = auth().currentUser;
+      if (!currentUser) {
+        console.error("User not authenticated");
+        return;
+      }
+      const userId = currentUser.uid;
+      const token = await currentUser.getIdToken();
+      const apiUrl = `https://admin.1-point.ca/api/getUser/${userId}`;
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`API Error: ${response.status} - ${errorText}`);
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
+      }
+
+      const userData = await response.json();
+      setTimeout(() => {
+        if (Array.isArray(userData) && userData.length > 0 && userData[0].merchantID) {
+          setMerchantId(userData[0].merchantID);
+        } else {
+          console.warn("No merchantID found.");
+        }
+      }, );
+    } catch (error) {
+      console.error("Error fetching merchantId:", error);
+    }
+  };
+
+  const [transactions, setTransactions] = useState<transaction[]>([]);
+
+  const fetchTransactions = async (merchantId: string | null) => {
+    const user = auth().currentUser;
+
+    const token = await user?.getIdToken();
+
+    fetch(`https://admin.1-point.ca/api/getMerchantTransactions/${merchantId}`, {
+      method: "GET",
+      headers: {
+        contentType: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          setTimeout(() => {
+            return response.json();
+          },);
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
+      .then((data: any[]) => {
+        const currTransactions: transaction[] = data.map((transaction, index) => {
+          return {
+            transactionAmount: transaction.pointsEquivalent,
+            transactionLocation: transaction.merchant_name,
+            transactionDate: (transaction.createdAt).split('T')[0],
+            transactionCustomerId: transactionArray[index % transactionArray.length].transactionCustomerId, // transaction.transactionCustomerId,
+            transactionStatus: transactionArray[index % transactionArray.length].transactionStatus, // transaction.transactionStatus,
+            transactionType: transaction.type,
+          }
+        });
+        setTransactions(currTransactions);
+        console.log(transactions);
+
+      })
+      .catch((error) => {
+        alert(`Error: ${error.message}`);
+        console.error(error);
+      });
+  }
+
+  useEffect(() => {
+    fetchMerchantId();
+  }, []);
+
+  useEffect(() => {
+    if (merchantId) {
+      fetchTransactions(merchantId);
+    }
+  }, [merchantId]);
 
   // Render the transactions section
   const renderTransactionPreview = () => {
@@ -142,7 +238,7 @@ export default function HomeScreen() {
   const mapTransactions = () => {
     return (
       <ThemedView>
-        {transactionArray.map((transaction) => {
+        {transactions.map((transaction) => {
           return (
             <TransactionRow
               transactionAmount={transaction.transactionAmount}
