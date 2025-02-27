@@ -19,6 +19,7 @@ import { LineChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { router } from "expo-router";
+import auth from '@react-native-firebase/auth';
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -28,15 +29,184 @@ export default function HomeScreen() {
   const [pointsIssued, setPointsIssued] = useState(0);
   const [pointsRedeemed, setPointsRedeemed] = useState(0);
   const [averageRevenue, setAverageRevenue] = useState(0);
+  const [netInput, setNetInput] = useState(0);
   const [netCustomers, setNetCustomers] = useState(0);
   const [index, setIndex] = useState(0);
   const [selectedTab, setSelectedTab] = useState('Today');
+  const [merchantId, setMerchantId] = useState<string | null>(null);
+  const [merchantName, setMerchantName] = useState<string | null>(null);
   const [routes] = useState([
     { key: 'firstTab', title: 'Today' },
     { key: 'secondTab', title: 'Yesterday' },
     { key: 'thirdTab', title: 'Monthly' },
     { key: 'fourthTab', title: 'Yearly' },
   ]);
+
+  const fetchMerchantId = async () => {
+    try {
+      const currentUser = auth().currentUser;
+      if (!currentUser) {
+        console.error("User not authenticated");
+        return;
+      }
+      const userId = currentUser.uid;
+      const token = await currentUser.getIdToken();
+      const apiUrl = `https://admin.1-point.ca/api/getUser/${userId}`;
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`API Error: ${response.status} - ${errorText}`);
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
+      }
+
+      const userData = await response.json();
+      setTimeout(() => {
+        if (Array.isArray(userData) && userData.length > 0 && userData[0].merchantID) {
+          setMerchantId(userData[0].merchantID);
+        } else {
+          console.warn("No merchantID found.");
+        }
+      },);
+    } catch (error) {
+      console.error("Error fetching merchantId:", error);
+    }
+  };
+
+  const fetchTransactions = async (merchantId: string | null) => {
+    try {
+      const user = auth().currentUser;
+      const token = await user?.getIdToken();
+      const apiURL = `https://admin.1-point.ca/api/getMerchantTransactions/${merchantId}`;
+      const response = await fetch(apiURL, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setTransactions(data);
+
+      if (data.length > 0 && data[0].merchant_name) {
+        setMerchantName(data[0].merchant_name);
+      }
+
+      filterTransactionsByDate(data, selectedTab);
+
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchMerchantId();
+  }, []);
+
+  useEffect(() => {
+    if (merchantId) {
+      fetchTransactions(merchantId);
+    }
+  }, [merchantId]);
+
+  interface Transaction {
+    type: string;
+    id: string;
+    userID: string;
+    merchantID: string;
+    subtotal: number;
+    pointsEquivalent: number;
+    createdAt: string;
+    updatedAt: string;
+  };
+
+  const filterTransactionsByDate = (transactions: Transaction[], filter: string) => {
+    const today = new Date();
+    let filteredTransactions: Transaction[] = [];
+    let dataLabels: string[] = [];
+    let issuedData: number[] = [];
+    let redeemedData: number[] = [];
+
+    if (filter === "Today") {
+      filteredTransactions = transactions.filter((txn: Transaction) =>
+        new Date(txn.createdAt).toDateString() === today.toDateString()
+      );
+    } else if (filter === "Yesterday") {
+      const yesterday = new Date();
+      yesterday.setDate(today.getDate() - 1);
+      filteredTransactions = transactions.filter((txn: Transaction) =>
+        new Date(txn.createdAt).toDateString() === yesterday.toDateString()
+      );
+    } else if (filter === "Monthly") {
+      filteredTransactions = transactions.filter((txn: Transaction) =>
+        new Date(txn.createdAt).getMonth() === today.getMonth() &&
+        new Date(txn.createdAt).getFullYear() === today.getFullYear()
+      );
+    } else if (filter === "Yearly") {
+      filteredTransactions = transactions.filter((txn: Transaction) =>
+        new Date(txn.createdAt).getFullYear() === today.getFullYear()
+      );
+    }
+
+    let issued = 0;
+    let redeemed = 0;
+    let totalRevenue = 0;
+    let uniqueCustomers = new Set<string>();
+
+    const groupTransactions: { [key: string]: { issued: number; redeemed: number } } = {}
+
+    filteredTransactions.forEach((txn: Transaction) => {
+      const txnDate = new Date(txn.createdAt).toLocaleDateString();
+      if (!groupTransactions[txnDate]) {
+        groupTransactions[txnDate] = { issued: 0, redeemed: 0 };
+      }
+      if (txn.type === "transaction") {
+        issued += txn.pointsEquivalent;
+        groupTransactions[txnDate].issued += txn.pointsEquivalent;
+      } else if (txn.type === "redemption") {
+        redeemed += txn.pointsEquivalent;
+        groupTransactions[txnDate].redeemed += txn.pointsEquivalent;
+      }
+      totalRevenue += txn.subtotal;
+      uniqueCustomers.add(txn.userID);
+    });
+
+    dataLabels = Object.keys(groupTransactions);
+    issuedData = dataLabels.map(date => groupTransactions[date].issued);
+    redeemedData = dataLabels.map(date => Math.abs(groupTransactions[date].redeemed || 0));
+
+    if (issuedData.length === 0) issuedData = [0];
+    if (redeemedData.length === 0) redeemedData = [0];
+
+    setPointsIssued(issued);
+    setPointsRedeemed(redeemed);
+    setNetInput((issued + redeemed) * 0.01)
+    setAverageRevenue(totalRevenue / (uniqueCustomers.size || 1));
+    setNetCustomers(uniqueCustomers.size);
+
+    setChartData({
+      labels: dataLabels.length > 0 ? dataLabels : ["No Data"],
+      datasets: [
+        { data: issuedData.every(num => isFinite(num)) ? issuedData : [0] },
+        { data: redeemedData.every(num => isFinite(num)) ? redeemedData : [0] },
+      ],
+    });
+  };
+
+  useEffect(() => {
+    filterTransactionsByDate(transactions, selectedTab);
+  }, [selectedTab, transactions]);
 
   interface PointsInfo {
     title: string;
@@ -93,6 +263,11 @@ export default function HomeScreen() {
         stroke: '#ffffff',
       }
     };
+
+    if (!data.labels || data.labels.length === 0) {
+      return <Text style={{ textAlign: 'center', padding: 10 }}>No Data Available</Text>;
+    }
+
     return (
       <View style={styles.chartContainer}>
         <LineChart
@@ -107,12 +282,13 @@ export default function HomeScreen() {
     );
   };
 
-  const chartData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
-    datasets: [{
-      data: [50, 10, 40, 95, 85]
-    }]
-  };
+  const [chartData, setChartData] = useState<ChartData>({
+    labels: [],
+    datasets: [
+      { data: [] },
+      { data: [] }
+    ],
+  });
 
   const viewReportButton = () => {
     return (
@@ -187,13 +363,13 @@ export default function HomeScreen() {
         style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 10 }}>
         <PointsDisplayCard
           title="POINTS ISSUED"
-          points={"1,000"}
+          points={pointsIssued.toLocaleString()}
           percentage="+24%"
           increase={true}
         />
         <PointsDisplayCard
           title="POINTS REDEEMED"
-          points={"528"}
+          points={pointsRedeemed.toLocaleString()}
           percentage="-16%"
           increase={false}
         />
@@ -212,21 +388,21 @@ export default function HomeScreen() {
         style={styles.displayMetricContainer}>
         <MetricCard
           title="AVERAGE REVENUE"
-          value={`$628.98`}
+          value={`$${averageRevenue.toFixed(2)}`}
           percentage="+24%"
           increase={true}
           imageSource={require('@/assets/images/growthIcon.png')}
         />
         <MetricCard
           title="NET INPUT"
-          value="$21.62"
+          value={`$${netInput.toFixed(2)}`}
           percentage="-16%"
           increase={false}
           imageSource={require('@/assets/images/inputIcon.png')}
         />
         <MetricCard
           title="NET# CUSTOMER"
-          value={"55"}
+          value={netCustomers.toLocaleString()}
           percentage="-16%"
           increase={false}
           imageSource={require('@/assets/images/customerIcon.png')}
@@ -246,13 +422,13 @@ export default function HomeScreen() {
         style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 10 }}>
         <PointsDisplayCard
           title="POINTS ISSUED"
-          points={"1,050"}
+          points={pointsIssued.toLocaleString()}
           percentage="+4%"
           increase={true}
         />
         <PointsDisplayCard
           title="POINTS REDEEMED"
-          points={"999"}
+          points={pointsRedeemed.toLocaleString()}
           percentage="+88%"
           increase={true}
         />
@@ -271,21 +447,21 @@ export default function HomeScreen() {
         style={styles.displayMetricContainer}>
         <MetricCard
           title="AVERAGE REVENUE"
-          value={`$202.55`}
+          value={`$${averageRevenue.toFixed(2)}`}
           percentage="-25%"
           increase={false}
           imageSource={require('@/assets/images/growthIcon.png')}
         />
         <MetricCard
           title="NET INPUT"
-          value="$100.69"
+          value={`$${netInput.toFixed(2)}`}
           percentage="-16%"
           increase={false}
           imageSource={require('@/assets/images/inputIcon.png')}
         />
         <MetricCard
           title="NET# CUSTOMER"
-          value={"123"}
+          value={netCustomers.toLocaleString()}
           percentage="-98%"
           increase={false}
           imageSource={require('@/assets/images/customerIcon.png')}
@@ -305,13 +481,13 @@ export default function HomeScreen() {
         style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 10 }}>
         <PointsDisplayCard
           title="POINTS ISSUED"
-          points={"2,064"}
+          points={pointsIssued.toLocaleString()}
           percentage="+105%"
           increase={true}
         />
         <PointsDisplayCard
           title="POINTS REDEEMED"
-          points={"1,111"}
+          points={pointsRedeemed.toLocaleString()}
           percentage="+167%"
           increase={true}
         />
@@ -330,21 +506,21 @@ export default function HomeScreen() {
         style={styles.displayMetricContainer}>
         <MetricCard
           title="AVERAGE REVENUE"
-          value={`$5,555.55`}
+          value={`$${averageRevenue.toFixed(2)}`}
           percentage="+210%"
           increase={true}
           imageSource={require('@/assets/images/growthIcon.png')}
         />
         <MetricCard
           title="NET INPUT"
-          value="$6,836.25"
+          value={`$${netInput.toFixed(2)}`}
           percentage="+198%"
           increase={true}
           imageSource={require('@/assets/images/inputIcon.png')}
         />
         <MetricCard
           title="NET# CUSTOMER"
-          value={"99"}
+          value={netCustomers.toLocaleString()}
           percentage="-16%"
           increase={false}
           imageSource={require('@/assets/images/customerIcon.png')}
@@ -364,13 +540,13 @@ export default function HomeScreen() {
         style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 10 }}>
         <PointsDisplayCard
           title="POINTS ISSUED"
-          points={"82"}
+          points={pointsIssued.toLocaleString()}
           percentage="-4%"
           increase={false}
         />
         <PointsDisplayCard
           title="POINTS REDEEMED"
-          points={"740"}
+          points={pointsRedeemed.toLocaleString()}
           percentage="-167%"
           increase={false}
         />
@@ -389,21 +565,21 @@ export default function HomeScreen() {
         style={styles.displayMetricContainer}>
         <MetricCard
           title="AVERAGE REVENUE"
-          value={`$564.25`}
+          value={`$${averageRevenue.toFixed(2)}`}
           percentage="-67%"
           increase={false}
           imageSource={require('@/assets/images/growthIcon.png')}
         />
         <MetricCard
           title="NET INPUT"
-          value="$0.98"
+          value={`$${netInput.toFixed(2)}`}
           percentage="-46%"
           increase={false}
           imageSource={require('@/assets/images/inputIcon.png')}
         />
         <MetricCard
           title="NET# CUSTOMER"
-          value={"66"}
+          value={netCustomers.toLocaleString()}
           percentage="+68%"
           increase={true}
           imageSource={require('@/assets/images/customerIcon.png')}
@@ -437,7 +613,7 @@ export default function HomeScreen() {
           <ThemedView
             style={[styles.headerText, { backgroundColor: theme.colors.card }]}
           >
-            <ThemedText style={[styles.welcomeText]}>WELCOME JOHN</ThemedText>
+            <ThemedText style={[styles.welcomeText]}>{`WELCOME ${merchantName?.toUpperCase()}`}</ThemedText>
           </ThemedView>
         </ThemedView>
         <View
@@ -501,9 +677,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   welcomeText: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: "bold",
-    paddingTop: 5,
+    paddingTop: 10,
+    letterSpacing: 1,
+    textAlign: "center",
   },
   subHeadingText: {
     fontSize: 16,
@@ -692,6 +870,7 @@ const styles = StyleSheet.create({
     padding: 10,
   },
 });
+
 
 
 /* // Array of elements to display
