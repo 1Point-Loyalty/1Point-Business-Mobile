@@ -5,12 +5,9 @@ import auth from "@react-native-firebase/auth";
 import QRInfoLoadingState from "@/components/loadingState/QRInfoLoadingState";
 import { router } from "expo-router";
 
-const QRScan = () => {
-  const [permission, requestPermission] = useCameraPermissions();
-  const [showQRCode, setShowQRCode] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
-  interface UserInfo {
+
+  export interface UserInfo {
     createdAt: string;
     currentPoints: number;
     email: string;
@@ -26,6 +23,10 @@ const QRScan = () => {
     updatedAt: string;
   }
 
+  const QRScan = () => {
+    const [permission, requestPermission] = useCameraPermissions();
+    const [showQRCode, setShowQRCode] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
 
   ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -113,7 +114,13 @@ const QRScan = () => {
             Math.floor(userInfo.currentPoints / 1000) * 10}
         </Text>
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.actionButton} onPress={() => router.navigate("../awardpoints")}>
+          <TouchableOpacity style={styles.actionButton}
+          onPress={() => {
+            router.navigate({
+              pathname: "../awardpoints",
+              params: { userInfo: JSON.stringify(userInfo) },
+            });
+          }}>
             <Text style={styles.buttonText}>Award Points</Text>
 
           </TouchableOpacity>
