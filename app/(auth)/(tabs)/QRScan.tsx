@@ -114,7 +114,13 @@ import { router } from "expo-router";
             Math.floor(userInfo.currentPoints / 1000) * 10}
         </Text>
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.actionButton} onPress={() => router.navigate("../awardpoints")}>
+          <TouchableOpacity style={styles.actionButton}
+          onPress={() => {
+            router.navigate({
+              pathname: "../awardpoints",
+              params: { userInfo: JSON.stringify(userInfo) },
+            });
+          }}>
             <Text style={styles.buttonText}>Award Points</Text>
 
           </TouchableOpacity>

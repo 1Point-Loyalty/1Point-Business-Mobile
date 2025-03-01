@@ -17,13 +17,14 @@ import { useTheme } from "@/constants/ThemeCheck";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import auth from "@react-native-firebase/auth";
-import { UserInfo } from "@/app/(auth)/(tabs)/QRScan";
+import { useLocalSearchParams } from "expo-router";
 
 export default function AwardPoints() {
   const theme = useTheme();
   const [loading, setLoading] = useState(true);
   const [subtotal, setSubtotal] = useState('0');
-  const [userInfo] = useState<UserInfo | null>(null);
+  const { userInfo: userInfoParam } = useLocalSearchParams();
+  const userInfo = userInfoParam ? JSON.parse(userInfoParam as string) : null;
 
   const createTransaction = async () => {
     if (!subtotal) {
@@ -31,8 +32,8 @@ export default function AwardPoints() {
       return;
     }
 
-    const customerId = userInfo?.id;
-    const pointsEquivalent = Math.round(Number(subtotal));
+    const customerId = userInfo.id;
+    const pointsEquivalent = Math.floor(Number(subtotal));
 
     const transactionData = {
       customerID: customerId,
@@ -42,7 +43,6 @@ export default function AwardPoints() {
 
     try {
       setLoading(true);
-
       const token = await auth().currentUser?.getIdToken(true);
       if (!token) {
         Alert.alert("Error", "Authentication failed. Please log in again.");
@@ -81,14 +81,11 @@ export default function AwardPoints() {
     }
   };
 
-
   const renderPointPreview = () => {
-
-    const points = Math.round(Number(subtotal));
+    const points = Math.floor(Number(subtotal));
 
     return (
       <ThemedView style={[styles.PromotionSection, { backgroundColor: theme.colors.background }]}>
-
         <ThemedView style={{ backgroundColor: theme.colors.background }}>
           <ThemedView style={[styles.row, styles.shadowProp, { backgroundColor: theme.colors.notification }]}>
             <View style={styles.imageContainer}>
