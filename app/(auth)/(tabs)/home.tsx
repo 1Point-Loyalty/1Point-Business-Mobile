@@ -407,6 +407,7 @@ export default function HomeScreen() {
           increase={false}
           imageSource={require('@/assets/images/customerIcon.png')}
         />
+        <View style={{ width: 20 }} />
       </ScrollView>
     </ScrollView>
   );
@@ -466,6 +467,7 @@ export default function HomeScreen() {
           increase={false}
           imageSource={require('@/assets/images/customerIcon.png')}
         />
+        <View style={{ width: 20 }} />
       </ScrollView>
     </ScrollView>
   );
@@ -525,6 +527,7 @@ export default function HomeScreen() {
           increase={false}
           imageSource={require('@/assets/images/customerIcon.png')}
         />
+        <View style={{ width: 20 }} />
       </ScrollView>
     </ScrollView>
   );
@@ -584,27 +587,35 @@ export default function HomeScreen() {
           increase={true}
           imageSource={require('@/assets/images/customerIcon.png')}
         />
+        <View style={{ width: 20 }} />
       </ScrollView>
     </ScrollView>
   );
 
-  const renderScene = SceneMap({
-    firstTab: Today,
-    secondTab: Yesterday,
-    thirdTab: Monthly,
-    fourthTab: Yearly,
-  });
+  const renderScene = ({ route }: { route: { key: string } }) => {
+    switch (route.key) {
+      case 'firstTab':
+        return <Today />;
+      case 'secondTab':
+        return <Yesterday />;
+      case 'thirdTab':
+        return <Monthly />;
+      case 'fourthTab':
+        return <Yearly />;
+      default:
+        return null;
+    }
+  };
 
   return (
-    <SafeAreaView style={[styles.main, { backgroundColor: theme.colors.card }]}>
+    <SafeAreaView
+      style={[styles.main, { backgroundColor: theme.colors.card }]}
+    >
       <ThemedView
         style={[styles.realContainer, { backgroundColor: theme.colors.card }]}
       >
         <ThemedView
-          style={[
-            styles.headerContainer,
-            { backgroundColor: theme.colors.card },
-          ]}
+          style={[styles.headerContainer, { backgroundColor: theme.colors.card }]}
         >
           <Image
             source={require("@/assets/images/1Point_Logo.png")}
@@ -613,23 +624,28 @@ export default function HomeScreen() {
           <ThemedView
             style={[styles.headerText, { backgroundColor: theme.colors.card }]}
           >
-            <ThemedText style={[styles.welcomeText]}>{`WELCOME ${merchantName?.toUpperCase()}`}</ThemedText>
+            <ThemedText
+              style={[styles.welcomeText]}>
+              {`WELCOME ${merchantName?.toUpperCase()}`}
+            </ThemedText>
           </ThemedView>
         </ThemedView>
         <View
-          style={[
-            styles.mainContainer,
-            { backgroundColor: theme.colors.background, flex: 1, },
-          ]}
+          style={[styles.mainContainer, { backgroundColor: theme.colors.background }]}
         >
-          <ScrollView contentContainerStyle={{ flexGrow: 1, }}>
-            <TabView
-              navigationState={{ index, routes }}
-              renderScene={renderScene}
-              onIndexChange={setIndex}
-              renderTabBar={renderTabBar}
-            />
-          </ScrollView>
+          <TabView
+            navigationState={{ index, routes }}
+            renderScene={({ route }) => (
+              <ScrollView
+                contentContainerStyle={{ flexGrow: 1, paddingBottom: 88 }}
+                showsVerticalScrollIndicator={false}
+              >
+                {renderScene({ route })}
+              </ScrollView>
+            )}
+            onIndexChange={setIndex}
+            renderTabBar={renderTabBar}
+          />
         </View>
       </ThemedView>
     </SafeAreaView>
@@ -642,19 +658,16 @@ const styles = StyleSheet.create({
   main: {
     flex: 1,
     paddingTop: 15,
-    //paddingBottom: 50
   },
   mainContainer: {
     flex: 1,
-    //paddingBottom: 100,
-    //paddingTop: 20,
     borderTopLeftRadius: 46,
     borderTopRightRadius: 46,
+    backgroundColor: "#F2F2F2",
   },
   realContainer: {
     flex: 1,
     paddingTop: 40,
-    //paddingBottom: 50
   },
 
   //-------------- Header styling -----------------
@@ -679,7 +692,7 @@ const styles = StyleSheet.create({
   welcomeText: {
     fontSize: 24,
     fontWeight: "bold",
-    paddingTop: 10,
+    paddingTop: 5,
     letterSpacing: 1,
     textAlign: "center",
   },
@@ -814,7 +827,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
     elevation: 3,
-    width: 160
+    width: 160,
+    height: 180
   },
   metricCardIcon: {
     width: 60,
@@ -828,6 +842,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 20,
+    paddingBottom: 10,
   },
   tabItem: {
     paddingVertical: 8,
@@ -868,6 +883,7 @@ const styles = StyleSheet.create({
   displayMetricContainer: {
     flexDirection: 'row',
     padding: 10,
+    paddingRight: 20,
   },
 });
 
