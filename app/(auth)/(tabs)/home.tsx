@@ -12,14 +12,14 @@ import {
   ScrollView,
 } from "react-native";
 import PagerThemedView from "react-native-pager-view";
-import { useNavigation } from 'expo-router';
+import { useNavigation } from "expo-router";
 import { useTheme } from "@/constants/ThemeCheck";
-import { TabView, SceneMap } from 'react-native-tab-view';
-import { LineChart } from 'react-native-chart-kit';
-import { Dimensions } from 'react-native';
+import { TabView, SceneMap } from "react-native-tab-view";
+import { LineChart } from "react-native-chart-kit";
+import { Dimensions } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { router } from "expo-router";
-import auth from '@react-native-firebase/auth';
+import auth from "@react-native-firebase/auth";
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -32,14 +32,14 @@ export default function HomeScreen() {
   const [netInput, setNetInput] = useState(0);
   const [netCustomers, setNetCustomers] = useState(0);
   const [index, setIndex] = useState(0);
-  const [selectedTab, setSelectedTab] = useState('Today');
+  const [selectedTab, setSelectedTab] = useState("Today");
   const [merchantId, setMerchantId] = useState<string | null>(null);
   const [merchantName, setMerchantName] = useState<string | null>(null);
   const [routes] = useState([
-    { key: 'firstTab', title: 'Today' },
-    { key: 'secondTab', title: 'Yesterday' },
-    { key: 'thirdTab', title: 'Monthly' },
-    { key: 'fourthTab', title: 'Yearly' },
+    { key: "firstTab", title: "Today" },
+    { key: "secondTab", title: "Yesterday" },
+    { key: "thirdTab", title: "Monthly" },
+    { key: "fourthTab", title: "Yearly" },
   ]);
 
   const fetchMerchantId = async () => {
@@ -68,12 +68,16 @@ export default function HomeScreen() {
 
       const userData = await response.json();
       setTimeout(() => {
-        if (Array.isArray(userData) && userData.length > 0 && userData[0].merchantID) {
+        if (
+          Array.isArray(userData) &&
+          userData.length > 0 &&
+          userData[0].merchantID
+        ) {
           setMerchantId(userData[0].merchantID);
         } else {
           console.warn("No merchantID found.");
         }
-      },);
+      });
     } catch (error) {
       console.error("Error fetching merchantId:", error);
     }
@@ -104,7 +108,6 @@ export default function HomeScreen() {
       }
 
       filterTransactionsByDate(data, selectedTab);
-
     } catch (error) {
       console.error("Error fetching transactions:", error);
     }
@@ -129,9 +132,12 @@ export default function HomeScreen() {
     pointsEquivalent: number;
     createdAt: string;
     updatedAt: string;
-  };
+  }
 
-  const filterTransactionsByDate = (transactions: Transaction[], filter: string) => {
+  const filterTransactionsByDate = (
+    transactions: Transaction[],
+    filter: string
+  ) => {
     const today = new Date();
     let filteredTransactions: Transaction[] = [];
     let dataLabels: string[] = [];
@@ -139,23 +145,27 @@ export default function HomeScreen() {
     let redeemedData: number[] = [];
 
     if (filter === "Today") {
-      filteredTransactions = transactions.filter((txn: Transaction) =>
-        new Date(txn.createdAt).toDateString() === today.toDateString()
+      filteredTransactions = transactions.filter(
+        (txn: Transaction) =>
+          new Date(txn.createdAt).toDateString() === today.toDateString()
       );
     } else if (filter === "Yesterday") {
       const yesterday = new Date();
       yesterday.setDate(today.getDate() - 1);
-      filteredTransactions = transactions.filter((txn: Transaction) =>
-        new Date(txn.createdAt).toDateString() === yesterday.toDateString()
+      filteredTransactions = transactions.filter(
+        (txn: Transaction) =>
+          new Date(txn.createdAt).toDateString() === yesterday.toDateString()
       );
     } else if (filter === "Monthly") {
-      filteredTransactions = transactions.filter((txn: Transaction) =>
-        new Date(txn.createdAt).getMonth() === today.getMonth() &&
-        new Date(txn.createdAt).getFullYear() === today.getFullYear()
+      filteredTransactions = transactions.filter(
+        (txn: Transaction) =>
+          new Date(txn.createdAt).getMonth() === today.getMonth() &&
+          new Date(txn.createdAt).getFullYear() === today.getFullYear()
       );
     } else if (filter === "Yearly") {
-      filteredTransactions = transactions.filter((txn: Transaction) =>
-        new Date(txn.createdAt).getFullYear() === today.getFullYear()
+      filteredTransactions = transactions.filter(
+        (txn: Transaction) =>
+          new Date(txn.createdAt).getFullYear() === today.getFullYear()
       );
     }
 
@@ -164,7 +174,9 @@ export default function HomeScreen() {
     let totalRevenue = 0;
     let uniqueCustomers = new Set<string>();
 
-    const groupTransactions: { [key: string]: { issued: number; redeemed: number } } = {}
+    const groupTransactions: {
+      [key: string]: { issued: number; redeemed: number };
+    } = {};
 
     filteredTransactions.forEach((txn: Transaction) => {
       const txnDate = new Date(txn.createdAt).toLocaleDateString();
@@ -183,23 +195,27 @@ export default function HomeScreen() {
     });
 
     dataLabels = Object.keys(groupTransactions);
-    issuedData = dataLabels.map(date => groupTransactions[date].issued);
-    redeemedData = dataLabels.map(date => Math.abs(groupTransactions[date].redeemed || 0));
+    issuedData = dataLabels.map((date) => groupTransactions[date].issued);
+    redeemedData = dataLabels.map((date) =>
+      Math.abs(groupTransactions[date].redeemed || 0)
+    );
 
     if (issuedData.length === 0) issuedData = [0];
     if (redeemedData.length === 0) redeemedData = [0];
 
     setPointsIssued(issued);
     setPointsRedeemed(redeemed);
-    setNetInput((issued + redeemed) * 0.01)
+    setNetInput((issued + redeemed) * 0.01);
     setAverageRevenue(totalRevenue / (uniqueCustomers.size || 1));
     setNetCustomers(uniqueCustomers.size);
 
     setChartData({
       labels: dataLabels.length > 0 ? dataLabels : ["No Data"],
       datasets: [
-        { data: issuedData.every(num => isFinite(num)) ? issuedData : [0] },
-        { data: redeemedData.every(num => isFinite(num)) ? redeemedData : [0] },
+        { data: issuedData.every((num) => isFinite(num)) ? issuedData : [0] },
+        {
+          data: redeemedData.every((num) => isFinite(num)) ? redeemedData : [0],
+        },
       ],
     });
   };
@@ -215,15 +231,37 @@ export default function HomeScreen() {
     increase: boolean;
   }
 
-  const PointsDisplayCard: React.FC<PointsInfo> = ({ title, points, percentage, increase }) => {
+  const PointsDisplayCard: React.FC<PointsInfo> = ({
+    title,
+    points,
+    percentage,
+    increase,
+  }) => {
     return (
       <View style={styles.pointsCard}>
         <Image
-          source={increase ? require('@/assets/images/up-arrow.png') : require('@/assets/images/down-arrow.png')}
-          style={styles.arrowImage} />
+          source={
+            increase
+              ? require("@/assets/images/up-arrow.png")
+              : require("@/assets/images/down-arrow.png")
+          }
+          style={styles.arrowImage}
+        />
         <View style={styles.pointsPercentageContainer}>
-          <View style={[styles.pointsPercentageBubble, { backgroundColor: increase ? '#4CAF50' : '#D32F2F' }]}>
-            <Text style={[styles.pointsPercentageText, { color: increase ? '#E8F5E9' : '#FFCDD2' }]}>{percentage}</Text>
+          <View
+            style={[
+              styles.pointsPercentageBubble,
+              { backgroundColor: increase ? "#4CAF50" : "#D32F2F" },
+            ]}
+          >
+            <Text
+              style={[
+                styles.pointsPercentageText,
+                { color: increase ? "#E8F5E9" : "#FFCDD2" },
+              ]}
+            >
+              {percentage}
+            </Text>
           </View>
         </View>
         <View style={styles.pointsContent}>
@@ -246,11 +284,11 @@ export default function HomeScreen() {
   }
 
   const CustomLineChart = ({ data }: ChartProps) => {
-    const screenWidth = Dimensions.get('window').width;
+    const screenWidth = Dimensions.get("window").width;
     const chartConfig = {
-      backgroundColor: '#ffffff',
-      backgroundGradientFrom: '#ffffff',
-      backgroundGradientTo: '#ffffff',
+      backgroundColor: "#ffffff",
+      backgroundGradientFrom: "#ffffff",
+      backgroundGradientTo: "#ffffff",
       decimalPlaces: 2,
       color: (opacity = 1) => `rgba(233, 95, 35, ${opacity})`,
       labelColor: (opacity = 1) => `rgba(128, 128, 128, ${opacity})`,
@@ -260,12 +298,16 @@ export default function HomeScreen() {
       propsForDots: {
         r: "6",
         strokeWidth: "1",
-        stroke: '#ffffff',
-      }
+        stroke: "#ffffff",
+      },
     };
 
     if (!data.labels || data.labels.length === 0) {
-      return <Text style={{ textAlign: 'center', padding: 10 }}>No Data Available</Text>;
+      return (
+        <Text style={{ textAlign: "center", padding: 10 }}>
+          No Data Available
+        </Text>
+      );
     }
 
     return (
@@ -284,17 +326,15 @@ export default function HomeScreen() {
 
   const [chartData, setChartData] = useState<ChartData>({
     labels: [],
-    datasets: [
-      { data: [] },
-      { data: [] }
-    ],
+    datasets: [{ data: [] }, { data: [] }],
   });
 
   const viewReportButton = () => {
     return (
       <TouchableOpacity
         style={styles.reportButton}
-        onPress={() => router.navigate('/(auth)/(tabs)/profile')}>
+        onPress={() => router.navigate("/(auth)/(tabs)/profile")}
+      >
         <Text style={styles.reportButtonText}>View Reports</Text>
         <View style={styles.arrowIcon}>
           <Icon name="chevron-right" size={32} color="#ffffff" />
@@ -311,15 +351,31 @@ export default function HomeScreen() {
     imageSource: any;
   }
 
-  const MetricCard: React.FC<metricCardProps> = ({ title, value, percentage, increase, imageSource }) => {
+  const MetricCard: React.FC<metricCardProps> = ({
+    title,
+    value,
+    percentage,
+    increase,
+    imageSource,
+  }) => {
     return (
       <View style={styles.metricCard}>
-        <Image
-          source={imageSource}
-          style={styles.metricCardIcon} />
+        <Image source={imageSource} style={styles.metricCardIcon} />
         <View style={styles.pointsPercentageContainer}>
-          <View style={[styles.pointsPercentageBubble, { backgroundColor: increase ? '#4CAF50' : '#D32F2F' }]}>
-            <Text style={[styles.pointsPercentageText, { color: increase ? '#E8F5E9' : '#FFCDD2' }]}>{percentage}</Text>
+          <View
+            style={[
+              styles.pointsPercentageBubble,
+              { backgroundColor: increase ? "#4CAF50" : "#D32F2F" },
+            ]}
+          >
+            <Text
+              style={[
+                styles.pointsPercentageText,
+                { color: increase ? "#E8F5E9" : "#FFCDD2" },
+              ]}
+            >
+              {percentage}
+            </Text>
           </View>
         </View>
         <View style={styles.pointsContent}>
@@ -330,19 +386,22 @@ export default function HomeScreen() {
     );
   };
 
-  const renderTabBar = (props: { navigationState: { routes: { key: string, title: string }[] } }) => (
+  const renderTabBar = (props: {
+    navigationState: { routes: { key: string; title: string }[] };
+  }) => (
     <View style={styles.tabBar}>
       {props.navigationState.routes.map((route, i) => {
         const isFocused = index === i;
-        const textColor = isFocused ? '#FFFFFF' : '#808080';
+        const textColor = isFocused ? "#FFFFFF" : "#808080";
         return (
           <TouchableOpacity
             key={i}
             style={[styles.tabItem, isFocused ? styles.tabItemFocused : null]}
             onPress={() => {
               setIndex(i);
-              setSelectedTab(route.title)
-            }}>
+              setSelectedTab(route.title);
+            }}
+          >
             <Text style={[styles.tabText, { color: textColor }]}>
               {route.title}
             </Text>
@@ -353,14 +412,22 @@ export default function HomeScreen() {
   );
 
   const Today = () => (
-    <ScrollView
-      style={[styles.tabDisplay, { backgroundColor: 'F2F2F2' }]}>
+    <ScrollView style={[styles.tabDisplay, { backgroundColor: "F2F2F2" }]}>
       <ThemedText
-        style={[styles.displayText, { backgroundColor: theme.colors.background }]}>
+        style={[
+          styles.displayText,
+          { backgroundColor: theme.colors.background },
+        ]}
+      >
         SUMMARY AND INSIGHTS
       </ThemedText>
       <View
-        style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 10 }}>
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          padding: 10,
+        }}
+      >
         <PointsDisplayCard
           title="POINTS ISSUED"
           points={pointsIssued.toLocaleString()}
@@ -374,38 +441,43 @@ export default function HomeScreen() {
           increase={false}
         />
       </View>
-      <View
-        style={styles.displayChartContainer}>
+      <View style={styles.displayChartContainer}>
         <CustomLineChart data={chartData} />
         {viewReportButton()}
       </View>
       <ThemedText
-        style={[styles.displayText, { backgroundColor: theme.colors.background }]}>
+        style={[
+          styles.displayText,
+          { backgroundColor: theme.colors.background },
+        ]}
+      >
         KEY METRICS
       </ThemedText>
       <ScrollView
-        horizontal showsHorizontalScrollIndicator={false}
-        style={styles.displayMetricContainer}>
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.displayMetricContainer}
+      >
         <MetricCard
           title="AVERAGE REVENUE"
           value={`$${averageRevenue.toFixed(2)}`}
           percentage="+24%"
           increase={true}
-          imageSource={require('@/assets/images/growthIcon.png')}
+          imageSource={require("@/assets/images/growthIcon.png")}
         />
         <MetricCard
           title="NET INPUT"
           value={`$${netInput.toFixed(2)}`}
           percentage="-16%"
           increase={false}
-          imageSource={require('@/assets/images/inputIcon.png')}
+          imageSource={require("@/assets/images/inputIcon.png")}
         />
         <MetricCard
           title="NET# CUSTOMER"
           value={netCustomers.toLocaleString()}
           percentage="-16%"
           increase={false}
-          imageSource={require('@/assets/images/customerIcon.png')}
+          imageSource={require("@/assets/images/customerIcon.png")}
         />
         <View style={{ width: 20 }} />
       </ScrollView>
@@ -413,14 +485,22 @@ export default function HomeScreen() {
   );
 
   const Yesterday = () => (
-    <ScrollView
-      style={[styles.tabDisplay, { backgroundColor: 'F2F2F2' }]}>
+    <ScrollView style={[styles.tabDisplay, { backgroundColor: "F2F2F2" }]}>
       <ThemedText
-        style={[styles.displayText, { backgroundColor: theme.colors.background }]}>
+        style={[
+          styles.displayText,
+          { backgroundColor: theme.colors.background },
+        ]}
+      >
         SUMMARY AND INSIGHTS
       </ThemedText>
       <View
-        style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 10 }}>
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          padding: 10,
+        }}
+      >
         <PointsDisplayCard
           title="POINTS ISSUED"
           points={pointsIssued.toLocaleString()}
@@ -434,38 +514,43 @@ export default function HomeScreen() {
           increase={true}
         />
       </View>
-      <View
-        style={styles.displayChartContainer}>
+      <View style={styles.displayChartContainer}>
         <CustomLineChart data={chartData} />
         {viewReportButton()}
       </View>
       <ThemedText
-        style={[styles.displayText, { backgroundColor: theme.colors.background }]}>
+        style={[
+          styles.displayText,
+          { backgroundColor: theme.colors.background },
+        ]}
+      >
         KEY METRICS
       </ThemedText>
       <ScrollView
-        horizontal showsHorizontalScrollIndicator={false}
-        style={styles.displayMetricContainer}>
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.displayMetricContainer}
+      >
         <MetricCard
           title="AVERAGE REVENUE"
           value={`$${averageRevenue.toFixed(2)}`}
           percentage="-25%"
           increase={false}
-          imageSource={require('@/assets/images/growthIcon.png')}
+          imageSource={require("@/assets/images/growthIcon.png")}
         />
         <MetricCard
           title="NET INPUT"
           value={`$${netInput.toFixed(2)}`}
           percentage="-16%"
           increase={false}
-          imageSource={require('@/assets/images/inputIcon.png')}
+          imageSource={require("@/assets/images/inputIcon.png")}
         />
         <MetricCard
           title="NET# CUSTOMER"
           value={netCustomers.toLocaleString()}
           percentage="-98%"
           increase={false}
-          imageSource={require('@/assets/images/customerIcon.png')}
+          imageSource={require("@/assets/images/customerIcon.png")}
         />
         <View style={{ width: 20 }} />
       </ScrollView>
@@ -473,14 +558,22 @@ export default function HomeScreen() {
   );
 
   const Monthly = () => (
-    <ScrollView
-      style={[styles.tabDisplay, { backgroundColor: 'F2F2F2' }]}>
+    <ScrollView style={[styles.tabDisplay, { backgroundColor: "F2F2F2" }]}>
       <ThemedText
-        style={[styles.displayText, { backgroundColor: theme.colors.background }]}>
+        style={[
+          styles.displayText,
+          { backgroundColor: theme.colors.background },
+        ]}
+      >
         SUMMARY AND INSIGHTS
       </ThemedText>
       <View
-        style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 10 }}>
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          padding: 10,
+        }}
+      >
         <PointsDisplayCard
           title="POINTS ISSUED"
           points={pointsIssued.toLocaleString()}
@@ -494,38 +587,43 @@ export default function HomeScreen() {
           increase={true}
         />
       </View>
-      <View
-        style={styles.displayChartContainer}>
+      <View style={styles.displayChartContainer}>
         <CustomLineChart data={chartData} />
         {viewReportButton()}
       </View>
       <ThemedText
-        style={[styles.displayText, { backgroundColor: theme.colors.background }]}>
+        style={[
+          styles.displayText,
+          { backgroundColor: theme.colors.background },
+        ]}
+      >
         KEY METRICS
       </ThemedText>
       <ScrollView
-        horizontal showsHorizontalScrollIndicator={false}
-        style={styles.displayMetricContainer}>
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.displayMetricContainer}
+      >
         <MetricCard
           title="AVERAGE REVENUE"
           value={`$${averageRevenue.toFixed(2)}`}
           percentage="+210%"
           increase={true}
-          imageSource={require('@/assets/images/growthIcon.png')}
+          imageSource={require("@/assets/images/growthIcon.png")}
         />
         <MetricCard
           title="NET INPUT"
           value={`$${netInput.toFixed(2)}`}
           percentage="+198%"
           increase={true}
-          imageSource={require('@/assets/images/inputIcon.png')}
+          imageSource={require("@/assets/images/inputIcon.png")}
         />
         <MetricCard
           title="NET# CUSTOMER"
           value={netCustomers.toLocaleString()}
           percentage="-16%"
           increase={false}
-          imageSource={require('@/assets/images/customerIcon.png')}
+          imageSource={require("@/assets/images/customerIcon.png")}
         />
         <View style={{ width: 20 }} />
       </ScrollView>
@@ -533,14 +631,22 @@ export default function HomeScreen() {
   );
 
   const Yearly = () => (
-    <ScrollView
-      style={[styles.tabDisplay, { backgroundColor: 'F2F2F2' }]}>
+    <ScrollView style={[styles.tabDisplay, { backgroundColor: "F2F2F2" }]}>
       <ThemedText
-        style={[styles.displayText, { backgroundColor: theme.colors.background }]}>
+        style={[
+          styles.displayText,
+          { backgroundColor: theme.colors.background },
+        ]}
+      >
         SUMMARY AND INSIGHTS
       </ThemedText>
       <View
-        style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 10 }}>
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          padding: 10,
+        }}
+      >
         <PointsDisplayCard
           title="POINTS ISSUED"
           points={pointsIssued.toLocaleString()}
@@ -554,38 +660,43 @@ export default function HomeScreen() {
           increase={false}
         />
       </View>
-      <View
-        style={styles.displayChartContainer}>
+      <View style={styles.displayChartContainer}>
         <CustomLineChart data={chartData} />
         {viewReportButton()}
       </View>
       <ThemedText
-        style={[styles.displayText, { backgroundColor: theme.colors.background }]}>
+        style={[
+          styles.displayText,
+          { backgroundColor: theme.colors.background },
+        ]}
+      >
         KEY METRICS
       </ThemedText>
       <ScrollView
-        horizontal showsHorizontalScrollIndicator={false}
-        style={styles.displayMetricContainer}>
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.displayMetricContainer}
+      >
         <MetricCard
           title="AVERAGE REVENUE"
           value={`$${averageRevenue.toFixed(2)}`}
           percentage="-67%"
           increase={false}
-          imageSource={require('@/assets/images/growthIcon.png')}
+          imageSource={require("@/assets/images/growthIcon.png")}
         />
         <MetricCard
           title="NET INPUT"
           value={`$${netInput.toFixed(2)}`}
           percentage="-46%"
           increase={false}
-          imageSource={require('@/assets/images/inputIcon.png')}
+          imageSource={require("@/assets/images/inputIcon.png")}
         />
         <MetricCard
           title="NET# CUSTOMER"
           value={netCustomers.toLocaleString()}
           percentage="+68%"
           increase={true}
-          imageSource={require('@/assets/images/customerIcon.png')}
+          imageSource={require("@/assets/images/customerIcon.png")}
         />
         <View style={{ width: 20 }} />
       </ScrollView>
@@ -594,13 +705,13 @@ export default function HomeScreen() {
 
   const renderScene = ({ route }: { route: { key: string } }) => {
     switch (route.key) {
-      case 'firstTab':
+      case "firstTab":
         return <Today />;
-      case 'secondTab':
+      case "secondTab":
         return <Yesterday />;
-      case 'thirdTab':
+      case "thirdTab":
         return <Monthly />;
-      case 'fourthTab':
+      case "fourthTab":
         return <Yearly />;
       default:
         return null;
@@ -608,14 +719,15 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView
-      style={[styles.main, { backgroundColor: theme.colors.card }]}
-    >
+    <SafeAreaView style={[styles.main, { backgroundColor: theme.colors.card }]}>
       <ThemedView
         style={[styles.realContainer, { backgroundColor: theme.colors.card }]}
       >
         <ThemedView
-          style={[styles.headerContainer, { backgroundColor: theme.colors.card }]}
+          style={[
+            styles.headerContainer,
+            { backgroundColor: theme.colors.card },
+          ]}
         >
           <Image
             source={require("@/assets/images/1Point_Logo.png")}
@@ -624,16 +736,19 @@ export default function HomeScreen() {
           <ThemedView
             style={[styles.headerText, { backgroundColor: theme.colors.card }]}
           >
-            <ThemedText
-              style={[styles.welcomeText]}>
+            <ThemedText style={[styles.welcomeText]}>
               {`WELCOME ${merchantName?.toUpperCase()}`}
             </ThemedText>
           </ThemedView>
         </ThemedView>
         <View
-          style={[styles.mainContainer, { backgroundColor: theme.colors.background }]}
+          style={[
+            styles.mainContainer,
+            { backgroundColor: theme.colors.background },
+          ]}
         >
           <TabView
+            swipeEnabled={false}
             navigationState={{ index, routes }}
             renderScene={({ route }) => (
               <ScrollView
@@ -717,53 +832,53 @@ const styles = StyleSheet.create({
     margin: 5,
     padding: 10,
     borderRadius: 20,
-    backgroundColor: '#ffffff',
-    shadowColor: '#000',
+    backgroundColor: "#ffffff",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
     elevation: 3,
     height: 140,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   arrowImage: {
-    position: 'absolute',
+    position: "absolute",
     top: 5,
     left: 10,
     width: 70,
     height: 70,
   },
   pointsPercentageContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 12,
     right: 18,
-    zIndex: 1
+    zIndex: 1,
   },
   pointsPercentageBubble: {
     borderRadius: 10,
     paddingVertical: 2,
-    paddingHorizontal: 6
+    paddingHorizontal: 6,
   },
   pointsPercentageText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    zIndex: 1
+    fontWeight: "bold",
+    zIndex: 1,
   },
   pointsContent: {
     marginTop: 45,
-    alignItems: 'center',
+    alignItems: "center",
   },
   points: {
     fontSize: 25,
-    fontWeight: 'bold',
-    textAlign: 'center'
+    fontWeight: "bold",
+    textAlign: "center",
   },
   title: {
     paddingTop: 5,
     fontSize: 18,
-    color: '#757575',
-    textAlign: 'center',
-    fontWeight: 'bold',
+    color: "#757575",
+    textAlign: "center",
+    fontWeight: "bold",
   },
 
   //-------------- Chart Styling -----------------
@@ -773,37 +888,37 @@ const styles = StyleSheet.create({
     margin: 15,
     marginTop: -1,
     borderRadius: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
     elevation: 3,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
   },
 
   //-------------- Report Button Styling -----------------
 
   reportButton: {
     marginHorizontal: 15,
-    backgroundColor: '#FF6D00',
+    backgroundColor: "#FF6D00",
     padding: 10,
     paddingLeft: 25,
     borderRadius: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
     elevation: 3,
     marginTop: -2,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
   },
   reportButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 20,
-    fontWeight: 'bold'
+    fontWeight: "bold",
   },
   arrowIcon: {
     height: 30,
@@ -820,15 +935,15 @@ const styles = StyleSheet.create({
     margin: 5,
     padding: 10,
     borderRadius: 20,
-    backgroundColor: '#ffffff',
-    justifyContent: 'center',
-    shadowColor: '#000',
+    backgroundColor: "#ffffff",
+    justifyContent: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
     elevation: 3,
     width: 160,
-    height: 180
+    height: 180,
   },
   metricCardIcon: {
     width: 60,
@@ -839,8 +954,8 @@ const styles = StyleSheet.create({
   //-------------- Tab Bar Styling -----------------
 
   tabBar: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     marginTop: 20,
     paddingBottom: 10,
   },
@@ -849,17 +964,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginHorizontal: 4,
     borderRadius: 20,
-    backgroundColor: '#F2F2F2',
-    borderColor: '#D8D8D8',
-    borderWidth: 2
+    backgroundColor: "#F2F2F2",
+    borderColor: "#D8D8D8",
+    borderWidth: 2,
   },
   tabItemFocused: {
-    backgroundColor: '#E95F23',
-    borderColor: '#E95F23'
+    backgroundColor: "#E95F23",
+    borderColor: "#E95F23",
   },
   tabText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 
   //-------------- Tab Display Styling -----------------
@@ -874,20 +989,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginLeft: 8,
     marginTop: 15,
-    marginBottom: 0
+    marginBottom: 0,
   },
   displayChartContainer: {
     flex: 1,
-    backgroundColor: '#f5f5f5'
+    backgroundColor: "#f5f5f5",
   },
   displayMetricContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 10,
     paddingRight: 20,
   },
 });
-
-
 
 /* // Array of elements to display
 const sliderElements = [
@@ -1387,80 +1500,3 @@ inactiveDot: {
   backgroundColor: "gray",
 },
 }); */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
