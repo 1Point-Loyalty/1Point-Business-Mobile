@@ -87,6 +87,7 @@ export default function Profile() {
         <SettingItem title="Security" icon="lock" path="security" />
         <SettingItem title="Help" icon="help" path="settlementReports" />
 
+
         <TouchableOpacity style={styles.logoutButton} onPress={() => auth().signOut()}>
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>

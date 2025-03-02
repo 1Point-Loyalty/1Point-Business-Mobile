@@ -13,6 +13,7 @@ export default function BusinessSettings() {
   const [tempValue, setTempValue] = useState('');
   const [merchantInfo, setMerchantInfo] = useState<MerchantInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [inputHeight, setInputHeight] = useState(40);
 
   type MerchantInfo = {
     name: string;
@@ -72,16 +73,29 @@ export default function BusinessSettings() {
 
   const openModal = (item: string) => {
     setCurrentItem(item);
-    setTempValue('');
+    setTempValue(
+      item == "Business Name" ? `${merchantInfo?.name}` :
+        item == "Address" ? `${merchantInfo?.address}` :
+          item == "Phone Number" ? `${merchantInfo?.phoneNumber}` :
+            item == "Website" ? `${merchantInfo?.website}` :
+              item == "About Your Business" ? `${merchantInfo?.bio}` :
+                item == "Logo URL" ? `${merchantInfo?.logoURL}` :
+                  ''
+    );
     setModalVisible(true);
   };
 
   const renderModalContent = () => {
     return (
       <TextInput
-        style={styles.input}
+        style={[styles.input, { height: Math.max(40, inputHeight) }]}
         value={tempValue}
         onChangeText={setTempValue}
+        multiline={true}
+        textAlignVertical={tempValue.length > 50 ? 'top' : 'center'}
+        onContentSizeChange={(event) =>
+          setInputHeight(event.nativeEvent.contentSize.height + 10)
+        }
       />
     );
   };
@@ -237,6 +251,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     alignItems: 'center',
+    justifyContent: 'space-between'
   },
   modalHeader: {
     flexDirection: 'row',
@@ -253,11 +268,14 @@ const styles = StyleSheet.create({
   },
   input: {
     width: '100%',
-    height: 40,
+    minHeight: 40,
+    maxHeight: 200,
     borderColor: '#ccc',
     borderWidth: 1,
     marginBottom: 20,
     paddingHorizontal: 10,
+    paddingVertical: 8,
+    textAlignVertical: 'center'
   },
   updateButton: {
     width: '100%',
