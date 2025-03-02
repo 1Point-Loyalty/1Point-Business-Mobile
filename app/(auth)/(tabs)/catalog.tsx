@@ -181,9 +181,11 @@ const styles = StyleSheet.create({
   },
 
   welcomeText: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: 'bold',
     paddingTop: 5,
+    letterSpacing: 1,
+    textAlign: "center",
   },
 
   subHeadingText: {
