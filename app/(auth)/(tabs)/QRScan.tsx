@@ -125,7 +125,13 @@ import { router } from "expo-router";
 
           </TouchableOpacity>
 
-          <TouchableOpacity disabled={true} style={styles.actionButton}>
+          <TouchableOpacity style={styles.actionButton}
+          onPress={() => {
+            router.navigate({
+              pathname: "../redeempoints",
+              params: { userInfo: JSON.stringify(userInfo) },
+            });
+          }}>
             <Text style={styles.buttonText}>Redeem Points</Text>
           </TouchableOpacity>
         </View>
