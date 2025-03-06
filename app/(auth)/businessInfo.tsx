@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, TextInput, Text, TouchableOpacity, ScrollView, Modal } from 'react-native';
 import { useRouter, useNavigation } from "expo-router";
-//import Icon from 'react-native-vector-icons/MaterialIcons';
 import Icon from 'react-native-vector-icons/Ionicons';
 import CheckBox from "expo-checkbox";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PhoneInput from "react-native-phone-input";
 import auth from "@react-native-firebase/auth";
+import * as DocumentPicker from 'expo-document-picker';
+import { DocumentPickerAsset } from 'expo-document-picker';
+import storage from '@react-native-firebase/storage';
+import Slider from '@react-native-community/slider';
+import { Picker } from '@react-native-picker/picker';
 
 export default function Register() {
 
@@ -22,6 +26,10 @@ export default function Register() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [website, setWebsite] = useState("");
   const [about, setAbout] = useState("");
+  const [logoDoc, setLogoDoc] = useState<DocumentPickerAsset | null>(null);
+  const [certificateDoc, setCertificateDoc] = useState<DocumentPickerAsset | null>(null);
+  const [selectedType, setSelectedType] = useState('Select a type'); // Initial type
+  const [pointsIssuanceRate, setPointsIssuanceRate] = useState(1); // Initialize slider value
 
   const countriesList = [
     {
@@ -33,15 +41,114 @@ export default function Register() {
     },
   ];
 
+  const pickLogo = async () => {
+    try {
+      const res = await DocumentPicker.getDocumentAsync({
+        type: '*/*',
+        copyToCacheDirectory: true,
+      });
+
+      if (res.assets && res.assets.length > 0) {
+        const selectedDocument = res.assets[0];
+        setLogoDoc(selectedDocument);
+      } else {
+        console.log('Document picking cancelled or failed');
+      }
+    } catch (err) {
+      console.error('Error picking document:', err);
+    }
+  };
+
+  const pickCertificate = async () => {
+    try {
+      const res = await DocumentPicker.getDocumentAsync({
+        type: '*/*',
+        copyToCacheDirectory: true,
+      });
+
+      if (res.assets && res.assets.length > 0) {
+        const selectedDocument = res.assets[0];
+        setCertificateDoc(selectedDocument);
+      } else {
+        console.log('Document picking cancelled or failed');
+      }
+    } catch (err) {
+      console.error('Error picking document:', err);
+    }
+  };
+
+  const uploadLogoToFirebase = async (userId: String) => {
+    if (!logoDoc) {
+      alert('Please select a logo first.');
+      return null;
+    }
+    try {
+      const reference = storage().ref(`merchant_logos/${userId}/logo`);
+      const task = reference.putFile(logoDoc.uri);
+      task.on('state_changed', snapshot => {
+        console.log(`Upload progress: ${(snapshot.bytesTransferred / snapshot.totalBytes) * 100}%`);
+      });
+      await task;
+      const url = await reference.getDownloadURL();
+      console.log('Uploaded file URL:', url);
+      return url;
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      alert('Error uploading logo. Please try again.');
+      return null;
+    }
+  };
+
+  const uploadCertificateToFirebase = async (userId: String) => {
+    if (!certificateDoc) {
+      alert('Please select a certificate of incorporation document first.');
+      return null;
+    }
+    try {
+      const reference = storage().ref(`merchant_documents/${userId}/certificate`);
+      const task = reference.putFile(certificateDoc.uri); 
+      task.on('state_changed', snapshot => {
+        console.log(`Upload progress: ${(snapshot.bytesTransferred / snapshot.totalBytes) * 100}%`);
+      });
+      await task;
+      const url = await reference.getDownloadURL();
+      console.log('Uploaded file URL:', url);
+      return url;
+    } catch (error) {
+      console.error('Error uploading certificate of incorporation:', error);
+      alert('Error uploading certificate of incorporation. Please try again.');
+      return null;
+    }
+  };
+
   const handleCreateMerchant = async () => {
       const user = auth().currentUser;
       const userId = user?.uid;
       const token = await user?.getIdToken(); // Retrieve the token from storage
-
+      if (!userId) {
+        alert("Error, Failed to recognize user");
+        return;
+      };
       if (!token) {
         alert("Error, No authentication token found");
         return;
       };
+      if (selectedType=='Select a type') {
+        alert("Please select a business type to represent your business")
+        return
+      }
+
+      const firebaseLogoURL = await uploadLogoToFirebase(userId);
+      if (!firebaseLogoURL) {
+        alert("Failed to upload logo")
+        return;
+      }
+
+      const firebaseCertificateURL = await uploadCertificateToFirebase(userId);
+      if (!firebaseCertificateURL) {
+        alert("Failed to upload certificate of incorporation")
+        return;
+      }
 
       const response = await fetch(
         `https://admin.1-point.ca/api/createMerchant/${userId}`,
@@ -57,7 +164,10 @@ export default function Register() {
             "phoneNumber": phoneNumber,
             "website": website,
             "bio": about,
-            "logoURL": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTz2jjI7PGWC5jMcHZ6pExeKekMo3LZ1ImU9g&s"
+            "logoURL": firebaseLogoURL,
+            "certificateURL": firebaseCertificateURL,
+            "type": selectedType,
+            "pointsPerDollar": pointsIssuanceRate
           }),
         }
       );
@@ -120,63 +230,93 @@ export default function Register() {
         <Text style={styles.header}>1Point Merchant</Text>
         <Text style={[styles.header, styles.headerSpacing]}>Registration</Text>
       </View>
-      <View style={styles.contentContainer}>
-        <TextInput
-          placeholder="Business Name"
-          placeholderTextColor={'black'}
-          style={styles.input}
-          onChangeText={setName}
-        />
-        <TextInput
-          placeholder="Address"
-          placeholderTextColor={'black'}
-          style={styles.input}
-          onChangeText={setAddress}
-        />
-        <PhoneInput
-          initialCountry="ca"
-          countriesList={countriesList}
-          textProps={{
-            placeholder: "Phone Number",
-            value: phoneNumber,
-            onChangeText: handlePhoneNumberChange,
-          }}
-          style={styles.input}
-        />
-        <TextInput
-          placeholder="Website"
-          placeholderTextColor={'black'}
-          style={styles.input}
-          onChangeText={setWebsite}
-        />
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.contentContainer}>
+          <TextInput
+            placeholder="Business Name"
+            placeholderTextColor={'black'}
+            style={styles.input}
+            onChangeText={setName}
+          />
+          <TextInput
+            placeholder="Address"
+            placeholderTextColor={'black'}
+            style={styles.input}
+            onChangeText={setAddress}
+          />
+          <PhoneInput
+            initialCountry="ca"
+            countriesList={countriesList}
+            textProps={{
+              placeholder: "Phone Number",
+              value: phoneNumber,
+              onChangeText: handlePhoneNumberChange,
+            }}
+            style={styles.input}
+          />
+          <TextInput
+            placeholder="Website"
+            placeholderTextColor={'black'}
+            style={styles.input}
+            onChangeText={setWebsite}
+          />
+          <View style={styles.pickerContainer}>
+          <Picker
+            style={styles.picker}
+            selectedValue={selectedType}
+            onValueChange={(itemValue) => setSelectedType(itemValue)}
+          >
+            <Picker.Item label="Select a type" value="Select a type" />
+            <Picker.Item label="Salon" value="Salon" />
+            <Picker.Item label="Retail" value="Retail" />
+            <Picker.Item label="Restaurant" value="Restaurant" />
+            <Picker.Item label="Café" value="Café" />
+            <Picker.Item label="Fitness" value="Fitness" />
+            <Picker.Item label="Boutique" value="Boutique" />
+            <Picker.Item label="Bookstore" value="Bookstore" />
+            <Picker.Item label="Pet Supplies" value="Pet Supplies" />
+            <Picker.Item label="Convenience" value="Convenience" />
+            <Picker.Item label="Entertainment" value="Entertainment" />
+          </Picker>
+        </View>
+      
         <TextInput
           placeholder="About Your Business"
           placeholderTextColor={'black'}
           style={[styles.input, styles.aboutInput]}
           onChangeText={setAbout}
         />
-        <TextInput
-          placeholder="Logo URL"
-          placeholderTextColor={'black'}
-          style={styles.input}
+        <TouchableOpacity style={styles.uploadButton} onPress={pickLogo}>
+          <Text style={styles.uploadButtonText}>Upload Logo</Text>
+        </TouchableOpacity>
+        {logoDoc && <Text style={styles.documentName}>{logoDoc.name}</Text>}
+        <TouchableOpacity style={styles.uploadButton} onPress={pickCertificate}>
+          <Text style={styles.uploadButtonText}>Upload Certificate of Incorporation</Text>
+        </TouchableOpacity>
+        {certificateDoc && <Text style={styles.documentName}>{certificateDoc.name}</Text>}
+        <View style={styles.sliderContainer}>
+        <Text style={styles.sliderLabel}>Points Issuance Rate: {pointsIssuanceRate}%</Text>
+        <Slider
+          style={styles.slider}
+          minimumValue={1}
+          maximumValue={100}
+          step={1}
+          value={pointsIssuanceRate}
+          onValueChange={setPointsIssuanceRate}
+          minimumTrackTintColor="#E95F23"
+          maximumTrackTintColor="#a1a09c"
         />
-        <View style={styles.inputContainer}>
-          <TextInput
-            placeholder="Points Issuance Rate (% per Dollar)"
-            placeholderTextColor={'black'}
-            style={styles.pointsText}
+        <TouchableOpacity
+          style={styles.infoButton}
+          onPress={() => openModal('Information')}>
+          <MaterialCommunityIcons
+            style={styles.icon}
+            name="information"
+            size={20}
+            color="#E95F23"
           />
-          <TouchableOpacity
-            style={styles.infoButton}
-            onPress={() => openModal('Information')}>
-            <MaterialCommunityIcons
-              style={styles.icon}
-              name="information"
-              size={20}
-              color="#E95F23"
-            />
-          </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
+      </View>
         <View style={styles.checkboxContainer}>
           <CheckBox
             value={isChecked}
@@ -210,6 +350,7 @@ export default function Register() {
           </View>
         </Modal>
       </View>
+      </ScrollView>
     </View>
   );
 }
@@ -222,6 +363,9 @@ const styles = StyleSheet.create({
     paddingTop: 0,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  scrollView: {
+    width: '100%',
   },
   roundedTop: {
     top: 0,
@@ -261,7 +405,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   aboutInput: {
-    height: 150,
+    height: 100,
     textAlignVertical: 'top',
     paddingTop: 10,
     marginBottom: 14,
@@ -292,6 +436,35 @@ const styles = StyleSheet.create({
   },
   checkbox: {
     marginRight: 10,
+  },
+  pickerContainer: {
+    width: '100%',
+    marginBottom: 16,
+  },
+  pickerLabel: {
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  picker: {
+    width: '100%',
+    height: 48,
+    borderColor: "#a1a09c",
+    borderWidth: 1,
+    borderRadius: 5,
+  },
+  sliderContainer: {
+    width: '100%',
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  sliderLabel: {
+    fontSize: 16,
+    marginBottom: 8,
+    alignSelf: 'flex-start',
+  },
+  slider: {
+    width: '100%',
+    height: 40,
   },
   button: {
     width: '100%',
@@ -363,6 +536,25 @@ const styles = StyleSheet.create({
     fontSize: 17,
     textAlign: 'center',
   },
+  uploadButton: {
+    width: '100%',
+    height: 48,
+    backgroundColor: '#ddd',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 5,
+    marginBottom: 16,
+  },
+  uploadButtonText: {
+    color: 'black',
+    fontSize: 16,
+  },
+  documentName: {
+    marginTop: -10,
+    marginBottom: 10,
+    color: 'gray',
+    fontSize:14,
+  }
 
 
 
