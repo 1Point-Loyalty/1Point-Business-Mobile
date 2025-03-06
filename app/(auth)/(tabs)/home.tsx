@@ -113,8 +113,38 @@ export default function HomeScreen() {
     }
   };
 
+  const fetchMerchantData = async () => {
+    try {
+      const user = auth().currentUser;
+      const userId = user?.uid;
+      const token = await user?.getIdToken(); // Retrieve the token from storage
+      if (!userId) {
+        alert("Error, Failed to recognize user");
+        return;
+      };
+      const apiURL = `https://admin.1-point.ca/api/getMerchant/${userId}`;
+      const response = await fetch(apiURL, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+      }
+      const data = await response.json();
+      setMerchantName(data.name);
+      
+    } catch (error) {
+      console.error("Error fetching merchant information:", error);
+    }
+  };
+
   useEffect(() => {
     fetchMerchantId();
+    fetchMerchantData();
   }, []);
 
   useEffect(() => {

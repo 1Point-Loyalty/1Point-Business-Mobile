@@ -195,11 +195,11 @@ export default function SignUp() {
           "lastName": last,
           "email": email,
           "phoneNumber": phoneNumber,
-          "isBO": 0,
+          "isBO": 1
         }),
       }
     );
-    
+
     const result = await response.json();
     console.log(result)
     if (response.ok) {
