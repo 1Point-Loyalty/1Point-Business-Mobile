@@ -27,10 +27,15 @@ export default function HomeScreen() {
 
   const [transactions, setTransactions] = useState([]);
   const [pointsIssued, setPointsIssued] = useState(0);
+  const [issuedChange, setIssuedChange] = useState(0);
   const [pointsRedeemed, setPointsRedeemed] = useState(0);
+  const [redeemedChange, setRedeemedChange] = useState(0);
   const [averageRevenue, setAverageRevenue] = useState(0);
+  const [averageRevenueChange, setAverageRevenueChange] = useState(0);
   const [netInput, setNetInput] = useState(0);
+  const [netInputChange, setNetInputChange] = useState(0);
   const [netCustomers, setNetCustomers] = useState(0);
+  const [netCustomersChange, setNetCustomersChange] = useState(0);
   const [index, setIndex] = useState(0);
   const [selectedTab, setSelectedTab] = useState("Today");
   const [merchantId, setMerchantId] = useState<string | null>(null);
@@ -140,14 +145,28 @@ export default function HomeScreen() {
   ) => {
     const today = new Date();
     let filteredTransactions: Transaction[] = [];
+    let previousTransactions: Transaction[] = [];
     let dataLabels: string[] = [];
     let issuedData: number[] = [];
     let redeemedData: number[] = [];
+
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    const lastMonth = new Date(today);
+    lastMonth.setMonth(today.getMonth() - 1);
+
+    const lastYear = new Date(today);
+    lastYear.setFullYear(today.getFullYear() - 1);
 
     if (filter === "Today") {
       filteredTransactions = transactions.filter(
         (txn: Transaction) =>
           new Date(txn.createdAt).toDateString() === today.toDateString()
+      );
+      previousTransactions = transactions.filter(
+        (txn: Transaction) =>
+          new Date(txn.createdAt).toDateString() === yesterday.toDateString()
       );
     } else if (filter === "Yesterday") {
       const yesterday = new Date();
@@ -156,23 +175,45 @@ export default function HomeScreen() {
         (txn: Transaction) =>
           new Date(txn.createdAt).toDateString() === yesterday.toDateString()
       );
+      const dayBeforeYesterday = new Date(yesterday);
+      dayBeforeYesterday.setDate(yesterday.getDate() - 1);
+      previousTransactions = transactions.filter(
+        (txn: Transaction) =>
+          new Date(txn.createdAt).toDateString() === dayBeforeYesterday.toDateString()
+      );
     } else if (filter === "Monthly") {
       filteredTransactions = transactions.filter(
         (txn: Transaction) =>
           new Date(txn.createdAt).getMonth() === today.getMonth() &&
           new Date(txn.createdAt).getFullYear() === today.getFullYear()
       );
+      previousTransactions = transactions.filter(
+        (txn: Transaction) =>
+          new Date(txn.createdAt).getMonth() === lastMonth.getMonth() &&
+          new Date(txn.createdAt).getFullYear() === lastMonth.getFullYear()
+      );
     } else if (filter === "Yearly") {
       filteredTransactions = transactions.filter(
         (txn: Transaction) =>
           new Date(txn.createdAt).getFullYear() === today.getFullYear()
       );
+      previousTransactions = transactions.filter(
+        (txn: Transaction) =>
+          new Date(txn.createdAt).getFullYear() === lastYear.getFullYear()
+      );
     }
 
     let issued = 0;
+    let prevIssued = 0;
     let redeemed = 0;
+    let prevRedeemed = 0;
+
     let totalRevenue = 0;
+    let prevTotalRevenue = 0;
+    let totalNetInput = 0;
+    let prevTotalNetInput = 0;
     let uniqueCustomers = new Set<string>();
+    let prevUniqueCustomers = new Set<string>();
 
     const groupTransactions: {
       [key: string]: { issued: number; redeemed: number };
@@ -191,8 +232,31 @@ export default function HomeScreen() {
         groupTransactions[txnDate].redeemed += txn.pointsEquivalent;
       }
       totalRevenue += txn.subtotal;
+      totalNetInput += (issued + redeemed) * 0.01;
       uniqueCustomers.add(txn.userID);
     });
+
+    previousTransactions.forEach((txn: Transaction) => {
+      if (txn.type === "transaction") {
+        prevIssued += txn.pointsEquivalent;
+      } else if (txn.type === "redemption") {
+        prevRedeemed += txn.pointsEquivalent;
+      }
+      prevTotalRevenue += txn.subtotal;
+      prevTotalNetInput += (prevIssued + prevRedeemed) * 0.01;
+      prevUniqueCustomers.add(txn.userID);
+    });
+
+    const calcPercentage = (current: number, previous: number) => {
+      if (previous === 0) return current === 0 ? 0 : 100;
+      return ((current - previous) / Math.abs(previous)) * 100;
+    };
+
+    const issuedChange = calcPercentage(issued, prevIssued);
+    const redeemedChange = calcPercentage(redeemed, prevRedeemed);
+    const averageRevenueChange = calcPercentage(totalRevenue, prevTotalRevenue);
+    const netInputChange = calcPercentage(totalNetInput, prevTotalNetInput);
+    const netCustomersChange = calcPercentage(uniqueCustomers.size, prevUniqueCustomers.size);
 
     dataLabels = Object.keys(groupTransactions);
     issuedData = dataLabels.map((date) => groupTransactions[date].issued);
@@ -204,10 +268,15 @@ export default function HomeScreen() {
     if (redeemedData.length === 0) redeemedData = [0];
 
     setPointsIssued(issued);
+    setIssuedChange(issuedChange);
     setPointsRedeemed(redeemed);
-    setNetInput((issued + redeemed) * 0.01);
+    setRedeemedChange(redeemedChange);
     setAverageRevenue(totalRevenue / (uniqueCustomers.size || 1));
+    setAverageRevenueChange(averageRevenueChange);
+    setNetInput(totalNetInput);
+    setNetInputChange(netInputChange);
     setNetCustomers(uniqueCustomers.size);
+    setNetCustomersChange(netCustomersChange);
 
     setChartData({
       labels: dataLabels.length > 0 ? dataLabels : ["No Data"],
@@ -260,7 +329,7 @@ export default function HomeScreen() {
                 { color: increase ? "#E8F5E9" : "#FFCDD2" },
               ]}
             >
-              {percentage}
+              {percentage}%
             </Text>
           </View>
         </View>
@@ -333,7 +402,7 @@ export default function HomeScreen() {
     return (
       <TouchableOpacity
         style={styles.reportButton}
-        onPress={() => router.navigate("/(auth)/(tabs)/profile")}
+        onPress={() => router.navigate("/(auth)/settlementReports")}
       >
         <Text style={styles.reportButtonText}>View Reports</Text>
         <View style={styles.arrowIcon}>
@@ -374,7 +443,7 @@ export default function HomeScreen() {
                 { color: increase ? "#E8F5E9" : "#FFCDD2" },
               ]}
             >
-              {percentage}
+              {percentage}%
             </Text>
           </View>
         </View>
@@ -431,14 +500,14 @@ export default function HomeScreen() {
         <PointsDisplayCard
           title="POINTS ISSUED"
           points={pointsIssued.toLocaleString()}
-          percentage="+24%"
-          increase={true}
+          percentage={issuedChange.toFixed(0)}
+          increase={issuedChange >= 0}
         />
         <PointsDisplayCard
           title="POINTS REDEEMED"
           points={pointsRedeemed.toLocaleString()}
-          percentage="-16%"
-          increase={false}
+          percentage={redeemedChange.toFixed(0)}
+          increase={redeemedChange >= 0}
         />
       </View>
       <View style={styles.displayChartContainer}>
@@ -461,22 +530,22 @@ export default function HomeScreen() {
         <MetricCard
           title="AVERAGE REVENUE"
           value={`$${averageRevenue.toFixed(2)}`}
-          percentage="+24%"
-          increase={true}
+          percentage={averageRevenueChange.toFixed(0)}
+          increase={averageRevenueChange >= 0}
           imageSource={require("@/assets/images/growthIcon.png")}
         />
         <MetricCard
           title="NET INPUT"
           value={`$${netInput.toFixed(2)}`}
-          percentage="-16%"
-          increase={false}
+          percentage={netInputChange.toFixed(0)}
+          increase={netInputChange >= 0}
           imageSource={require("@/assets/images/inputIcon.png")}
         />
         <MetricCard
           title="NET# CUSTOMER"
           value={netCustomers.toLocaleString()}
-          percentage="-16%"
-          increase={false}
+          percentage={netCustomersChange.toFixed(0)}
+          increase={netCustomersChange >= 0}
           imageSource={require("@/assets/images/customerIcon.png")}
         />
         <View style={{ width: 20 }} />
@@ -504,14 +573,14 @@ export default function HomeScreen() {
         <PointsDisplayCard
           title="POINTS ISSUED"
           points={pointsIssued.toLocaleString()}
-          percentage="+4%"
-          increase={true}
+          percentage={issuedChange.toFixed(0)}
+          increase={issuedChange >= 0}
         />
         <PointsDisplayCard
           title="POINTS REDEEMED"
           points={pointsRedeemed.toLocaleString()}
-          percentage="+88%"
-          increase={true}
+          percentage={redeemedChange.toFixed(0)}
+          increase={redeemedChange >= 0}
         />
       </View>
       <View style={styles.displayChartContainer}>
@@ -534,22 +603,22 @@ export default function HomeScreen() {
         <MetricCard
           title="AVERAGE REVENUE"
           value={`$${averageRevenue.toFixed(2)}`}
-          percentage="-25%"
-          increase={false}
+          percentage={averageRevenueChange.toFixed(0)}
+          increase={averageRevenueChange >= 0}
           imageSource={require("@/assets/images/growthIcon.png")}
         />
         <MetricCard
           title="NET INPUT"
           value={`$${netInput.toFixed(2)}`}
-          percentage="-16%"
-          increase={false}
+          percentage={netInputChange.toFixed(0)}
+          increase={netInputChange >= 0}
           imageSource={require("@/assets/images/inputIcon.png")}
         />
         <MetricCard
           title="NET# CUSTOMER"
           value={netCustomers.toLocaleString()}
-          percentage="-98%"
-          increase={false}
+          percentage={netCustomersChange.toFixed(0)}
+          increase={netCustomersChange >= 0}
           imageSource={require("@/assets/images/customerIcon.png")}
         />
         <View style={{ width: 20 }} />
@@ -577,14 +646,14 @@ export default function HomeScreen() {
         <PointsDisplayCard
           title="POINTS ISSUED"
           points={pointsIssued.toLocaleString()}
-          percentage="+105%"
-          increase={true}
+          percentage={issuedChange.toFixed(0)}
+          increase={issuedChange >= 0}
         />
         <PointsDisplayCard
           title="POINTS REDEEMED"
           points={pointsRedeemed.toLocaleString()}
-          percentage="+167%"
-          increase={true}
+          percentage={redeemedChange.toFixed(0)}
+          increase={redeemedChange >= 0}
         />
       </View>
       <View style={styles.displayChartContainer}>
@@ -607,22 +676,22 @@ export default function HomeScreen() {
         <MetricCard
           title="AVERAGE REVENUE"
           value={`$${averageRevenue.toFixed(2)}`}
-          percentage="+210%"
-          increase={true}
+          percentage={averageRevenueChange.toFixed(0)}
+          increase={averageRevenueChange >= 0}
           imageSource={require("@/assets/images/growthIcon.png")}
         />
         <MetricCard
           title="NET INPUT"
           value={`$${netInput.toFixed(2)}`}
-          percentage="+198%"
-          increase={true}
+          percentage={netInputChange.toFixed(0)}
+          increase={netInputChange >= 0}
           imageSource={require("@/assets/images/inputIcon.png")}
         />
         <MetricCard
           title="NET# CUSTOMER"
           value={netCustomers.toLocaleString()}
-          percentage="-16%"
-          increase={false}
+          percentage={netCustomersChange.toFixed(0)}
+          increase={netCustomersChange >= 0}
           imageSource={require("@/assets/images/customerIcon.png")}
         />
         <View style={{ width: 20 }} />
@@ -650,14 +719,14 @@ export default function HomeScreen() {
         <PointsDisplayCard
           title="POINTS ISSUED"
           points={pointsIssued.toLocaleString()}
-          percentage="-4%"
-          increase={false}
+          percentage={issuedChange.toFixed(0)}
+          increase={issuedChange >= 0}
         />
         <PointsDisplayCard
           title="POINTS REDEEMED"
           points={pointsRedeemed.toLocaleString()}
-          percentage="-167%"
-          increase={false}
+          percentage={redeemedChange.toFixed(0)}
+          increase={redeemedChange >= 0}
         />
       </View>
       <View style={styles.displayChartContainer}>
@@ -680,22 +749,22 @@ export default function HomeScreen() {
         <MetricCard
           title="AVERAGE REVENUE"
           value={`$${averageRevenue.toFixed(2)}`}
-          percentage="-67%"
-          increase={false}
+          percentage={averageRevenueChange.toFixed(0)}
+          increase={averageRevenueChange >= 0}
           imageSource={require("@/assets/images/growthIcon.png")}
         />
         <MetricCard
           title="NET INPUT"
           value={`$${netInput.toFixed(2)}`}
-          percentage="-46%"
-          increase={false}
+          percentage={netInputChange.toFixed(0)}
+          increase={netInputChange >= 0}
           imageSource={require("@/assets/images/inputIcon.png")}
         />
         <MetricCard
           title="NET# CUSTOMER"
           value={netCustomers.toLocaleString()}
-          percentage="+68%"
-          increase={true}
+          percentage={netCustomersChange.toFixed(0)}
+          increase={netCustomersChange >= 0}
           imageSource={require("@/assets/images/customerIcon.png")}
         />
         <View style={{ width: 20 }} />
@@ -858,6 +927,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: 2,
     paddingHorizontal: 6,
+    minWidth: 45,
+    maxWidth: 60,
+    alignItems: "center",
+    justifyContent: "center",
   },
   pointsPercentageText: {
     fontSize: 16,
