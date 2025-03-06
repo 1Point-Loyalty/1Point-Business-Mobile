@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TextInput, Text, TouchableOpacity, ScrollView, Modal } from 'react-native';
+import { StyleSheet, View, TextInput, Text, TouchableOpacity, ScrollView, Modal, ActivityIndicator } from 'react-native';
 import { useRouter, useNavigation } from "expo-router";
 import Icon from 'react-native-vector-icons/Ionicons';
 import CheckBox from "expo-checkbox";
@@ -20,6 +20,7 @@ export default function Register() {
   const [isModalVisible, setModalVisible] = useState(false);
   const [currentItem, setCurrentItem] = useState('');
   const [tempValue, setTempValue] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
@@ -122,30 +123,36 @@ export default function Register() {
   };
 
   const handleCreateMerchant = async () => {
+      setIsLoading(true); // Start loading
       const user = auth().currentUser;
       const userId = user?.uid;
       const token = await user?.getIdToken(); // Retrieve the token from storage
       if (!userId) {
+        setIsLoading(false)
         alert("Error, Failed to recognize user");
         return;
       };
       if (!token) {
+        setIsLoading(false)
         alert("Error, No authentication token found");
         return;
       };
       if (selectedType=='Select a type') {
+        setIsLoading(false)
         alert("Please select a business type to represent your business")
         return
       }
 
       const firebaseLogoURL = await uploadLogoToFirebase(userId);
       if (!firebaseLogoURL) {
+        setIsLoading(false)
         alert("Failed to upload logo")
         return;
       }
 
       const firebaseCertificateURL = await uploadCertificateToFirebase(userId);
       if (!firebaseCertificateURL) {
+        setIsLoading(false)
         alert("Failed to upload certificate of incorporation")
         return;
       }
@@ -173,14 +180,15 @@ export default function Register() {
       );
 
       console.log(response)
-
       if (response.ok) {
         const result = await response.json();
+        setIsLoading(false)
         alert("Success, Merchant created successfully");
         router.navigate("/home")
       } else {
         const error = await response.text();
         console.log(error)
+        setIsLoading(false)
         alert(error);
       }
   }
@@ -299,7 +307,7 @@ export default function Register() {
         <Slider
           style={styles.slider}
           minimumValue={1}
-          maximumValue={100}
+          maximumValue={10}
           step={1}
           value={pointsIssuanceRate}
           onValueChange={setPointsIssuanceRate}
@@ -325,6 +333,11 @@ export default function Register() {
           />
           <Text style={styles.checkboxLabel}>Agree to terms and conditions</Text>
         </View>
+        {isLoading && (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#E95F23" />
+            </View>
+          )}
         <TouchableOpacity
           style={styles.button}
           onPress={() => handleCreateMerchant()}
@@ -499,6 +512,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  loadingContainer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modalContent: {
     width: '90%',
