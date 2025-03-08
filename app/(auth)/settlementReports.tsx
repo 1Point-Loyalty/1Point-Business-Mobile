@@ -2,21 +2,82 @@ import React, { useEffect, useState } from 'react';
 import { SafeAreaView, ScrollView, View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, Button, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from "expo-router";
+import auth from '@react-native-firebase/auth';
 
 export default function SettlementReports() {
     const navigation = useNavigation();
     navigation.setOptions({ headerShown: false });
 
-    const months = () => {
-        const allMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const currentMonth = new Date().getMonth();
-        return allMonths.slice(0, currentMonth);
+    const [monthsData, setMonthsData] = useState<{ month: string; amount: string }[]>([]);
+
+    interface Invoice {
+        invoiceDate: string;
+        totalAmount: string;
+        invoiceID: string;
+    }
+
+    const fetchInvoices = async () => {
+        try {
+            const currentUser = auth().currentUser;
+            if (!currentUser) {
+                console.error("User not authenticated");
+                return;
+            }
+            const userId = currentUser.uid;
+            //const token = await currentUser.getIdToken();
+            const token = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImJjNDAxN2U3MGE4MWM5NTMxY2YxYjY4MjY4M2Q5OThlNGY1NTg5MTkiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vcG9pbnQtYWRtaW4iLCJhdWQiOiJwb2ludC1hZG1pbiIsImF1dGhfdGltZSI6MTc0MTQzMjg3OSwidXNlcl9pZCI6Im81dDlxVXBxSGlnTk5mVXpycDdOaDAxd2l6NzIiLCJzdWIiOiJvNXQ5cVVwcUhpZ05OZlV6cnA3TmgwMXdpejcyIiwiaWF0IjoxNzQxNDMyODc5LCJleHAiOjE3NDE0MzY0NzksImVtYWlsIjoiYXNodmluZ3Jld2FsMDJAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcmViYXNlIjp7ImlkZW50aXRpZXMiOnsiZW1haWwiOlsiYXNodmluZ3Jld2FsMDJAZ21haWwuY29tIl19LCJzaWduX2luX3Byb3ZpZGVyIjoicGFzc3dvcmQifX0.bCZQxjDB_tkR4Sm9hnBp9QD_mEAqKkQjODZeZInaRzmoLzKcTGiezRy6AGLdwVf3daG8piG4uelrvyhQRKzlphY3ZmckHPTmxSCmsNIUJhL4IpYXwgbnqV9kiT60YKeCkx4_KdykryXgQFX0sr1VjWz5HNWXnd9M7tk-WKwvV1oDJa4NAljBt_VbJcuBftYPe70PWjt3gf5J3Du6_VH3qAX__PrvTOQUMrxSiXKYWVvo79OZaiHjnGgTsPCmtjSFDlRfUuxgCHQTCOZw_uRTJHWAxvS6Nr2OraBUGHnPIdUVxWA7bSdeKe8Kv0P9a-XfAPCTko5BepWuzWXXLurR4Q"
+
+            const apiURL = `https://admin.1-point.ca/api/getInvoices/${userId}`;
+            const response = await fetch(apiURL, {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`API Error: ${response.status} - ${errorText}`);
+                throw new Error(`API Error: ${response.status} - ${errorText}`);
+            }
+
+            const invoices = await response.json();
+            processInvoices(invoices);
+
+        } catch (error) {
+            console.error("Error Fetching Invoices:", error);
+        } finally {
+
+        }
     };
 
-    const month = months().map(month => ({
-        month,
-        amount: "100.25",
-    }));
+    useEffect(() => {
+        fetchInvoices();
+    }, []);
+
+    const processInvoices = (invoices: Invoice[]) => {
+        const allMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const currentMonthIndex = new Date().getMonth();
+        const data = allMonths.slice(0, currentMonthIndex).map(month => ({
+            month,
+            amount: "0.00",
+        }));
+
+        invoices.forEach((invoice) => {
+            const dateParts = invoice.invoiceDate.split(' ');
+            const monthStr = dateParts[0];
+            const monthIndex = allMonths.indexOf(monthStr) - 1;
+
+            if (monthIndex >= 0 && monthIndex < currentMonthIndex) {
+                const invoiceAmount = parseFloat(invoice.totalAmount).toFixed(2);
+                data[monthIndex].amount = invoiceAmount;
+            } else {
+                console.error(`Error: Invoice date ${invoice.invoiceDate} is invalid or in the future.`)
+            }
+        });
+        setMonthsData(data);
+    };
 
     return (
         <SafeAreaView style={styles.main}>
@@ -53,8 +114,13 @@ export default function SettlementReports() {
                     </Text>
                 </TouchableOpacity>
                 <View style={styles.monthsContainer}>
-                    {month.map((item: { month: string; amount: string }, index: number) => (
-                        <TouchableOpacity key={index} style={styles.monthCard}
+                    {monthsData.map((item, index) => (
+                        <TouchableOpacity key={index}
+                            style={[
+                                styles.monthCard,
+                                index % 3 === 0 ? styles.monthCardFirst : null,
+                                (index + 1) % 3 === 0 ? styles.monthCardLast : null
+                            ]}
                             onPress={() => { }}>
                             <Text style={styles.monthText}>
                                 {item.month}
@@ -146,8 +212,8 @@ const styles = StyleSheet.create({
     },
     selectAllButton: {
         paddingVertical: 12,
-        marginLeft: 2,
-        marginBottom: 20,
+        marginLeft: 4,
+        marginBottom: 16,
     },
     selectAllText: {
         color: '#808080',
@@ -161,7 +227,8 @@ const styles = StyleSheet.create({
     monthsContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        justifyContent: 'space-between',
+        justifyContent: 'flex-start',
+        alignItems: 'flex-start',
     },
     monthCard: {
         width: '30%',
@@ -171,6 +238,14 @@ const styles = StyleSheet.create({
         borderColor: '#D8D8D8',
         alignItems: 'center',
         marginBottom: 10,
+        marginRight: 7,
+        marginLeft: 7,
+    },
+    monthCardFirst: {
+        marginLeft: 2,
+    },
+    monthCardLast: {
+        marginRight: 0,
     },
     monthText: {
         color: '#E95F23',
