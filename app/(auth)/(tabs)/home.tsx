@@ -21,6 +21,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import { router } from "expo-router";
 import auth from "@react-native-firebase/auth";
 
+
 export default function HomeScreen() {
   const navigation = useNavigation();
   const theme = useTheme();
@@ -36,10 +37,15 @@ export default function HomeScreen() {
   const [netInputChange, setNetInputChange] = useState(0);
   const [netCustomers, setNetCustomers] = useState(0);
   const [netCustomersChange, setNetCustomersChange] = useState(0);
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const [index, setIndex] = useState(0);
   const [selectedTab, setSelectedTab] = useState("Today");
   const [merchantId, setMerchantId] = useState<string | null>(null);
   const [merchantName, setMerchantName] = useState<string | null>(null);
+  const [chartData, setChartData] = useState<LineChartData>({
+    labels: [],
+    datasets: [{ data: [] }, { data: [] }],
+  });
   const [routes] = useState([
     { key: "firstTab", title: "Today" },
     { key: "secondTab", title: "Yesterday" },
@@ -139,154 +145,162 @@ export default function HomeScreen() {
     updatedAt: string;
   }
 
+  const groupChartData = (transactions: Transaction[], timeUnit: string) => {
+
+    const groupByTimeUnit: { [key: string]: { issued: number; redeemed: number } } = {};
+    transactions.forEach(txn => {
+      const date = new Date(txn.createdAt);
+      let label;
+      if (timeUnit === 'hour') {
+        label = `${date.getHours()}:00`;
+      } else if (timeUnit === 'day') {
+        label = `${date.getDate()}`;
+      } else if (timeUnit === 'month') {
+        label = `${monthNames[date.getMonth()]}`;
+      }
+
+      if (label) {
+        if (!groupByTimeUnit[label]) {
+          groupByTimeUnit[label] = { issued: 0, redeemed: 0 };
+        }
+        if (txn.type === 'transaction') {
+          groupByTimeUnit[label].issued += txn.pointsEquivalent;
+        } else if (txn.type === 'redemption') {
+          groupByTimeUnit[label].redeemed += txn.pointsEquivalent;
+        }
+      }
+    });
+    const labels = Object.keys(groupByTimeUnit).sort();
+    const issuedData = labels.map(label => groupByTimeUnit[label].issued);
+    const redeemedData = labels.map(label => Math.abs(groupByTimeUnit[label].redeemed));
+
+    return { labels, issuedData, redeemedData };
+  };
+
   const filterTransactionsByDate = (
     transactions: Transaction[],
     filter: string
   ) => {
+    const getDates = (date: Date, { days = 0, months = 0, years = 0 }) => {
+      const newDate = new Date(date);
+      newDate.setDate(newDate.getDate() + days);
+      newDate.setMonth(newDate.getMonth() + months);
+      newDate.setFullYear(newDate.getFullYear() + years);
+      return newDate;
+    };
     const today = new Date();
+    const yesterday = getDates(today, { days: -1 });
+    const lastMonth = getDates(today, { months: -1 });
+    const lastYear = getDates(today, { years: -1 });
+
+    const filterByDate = (transactions: Transaction[], compareDate: Date) => {
+      return transactions.filter(txn =>
+        new Date(txn.createdAt).toDateString() === compareDate.toDateString());
+    };
+
     let filteredTransactions: Transaction[] = [];
     let previousTransactions: Transaction[] = [];
-    let dataLabels: string[] = [];
-    let issuedData: number[] = [];
-    let redeemedData: number[] = [];
 
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
-
-    const lastMonth = new Date(today);
-    lastMonth.setMonth(today.getMonth() - 1);
-
-    const lastYear = new Date(today);
-    lastYear.setFullYear(today.getFullYear() - 1);
-
-    if (filter === "Today") {
-      filteredTransactions = transactions.filter(
-        (txn: Transaction) =>
-          new Date(txn.createdAt).toDateString() === today.toDateString()
+    if (filter === 'Today') {
+      filteredTransactions = filterByDate(transactions, today);
+      previousTransactions = filterByDate(transactions, yesterday);
+    } else if (filter === 'Yesterday') {
+      filteredTransactions = filterByDate(transactions, yesterday);
+      const dayBeforeYesterday = getDates(yesterday, { days: -1 });
+      previousTransactions = filterByDate(transactions, dayBeforeYesterday);
+    } else if (filter === 'Monthly') {
+      filteredTransactions = transactions.filter(txn =>
+        new Date(txn.createdAt).getMonth() === today.getMonth() &&
+        new Date(txn.createdAt).getFullYear() === today.getFullYear()
       );
-      previousTransactions = transactions.filter(
-        (txn: Transaction) =>
-          new Date(txn.createdAt).toDateString() === yesterday.toDateString()
+      previousTransactions = transactions.filter(txn =>
+        new Date(txn.createdAt).getMonth() === lastMonth.getMonth() &&
+        new Date(txn.createdAt).getFullYear() === lastMonth.getFullYear()
       );
-    } else if (filter === "Yesterday") {
-      const yesterday = new Date();
-      yesterday.setDate(today.getDate() - 1);
-      filteredTransactions = transactions.filter(
-        (txn: Transaction) =>
-          new Date(txn.createdAt).toDateString() === yesterday.toDateString()
+    } else if (filter === 'Yearly') {
+      filteredTransactions = transactions.filter(txn =>
+        new Date(txn.createdAt).getFullYear() === today.getFullYear()
       );
-      const dayBeforeYesterday = new Date(yesterday);
-      dayBeforeYesterday.setDate(yesterday.getDate() - 1);
-      previousTransactions = transactions.filter(
-        (txn: Transaction) =>
-          new Date(txn.createdAt).toDateString() === dayBeforeYesterday.toDateString()
-      );
-    } else if (filter === "Monthly") {
-      filteredTransactions = transactions.filter(
-        (txn: Transaction) =>
-          new Date(txn.createdAt).getMonth() === today.getMonth() &&
-          new Date(txn.createdAt).getFullYear() === today.getFullYear()
-      );
-      previousTransactions = transactions.filter(
-        (txn: Transaction) =>
-          new Date(txn.createdAt).getMonth() === lastMonth.getMonth() &&
-          new Date(txn.createdAt).getFullYear() === lastMonth.getFullYear()
-      );
-    } else if (filter === "Yearly") {
-      filteredTransactions = transactions.filter(
-        (txn: Transaction) =>
-          new Date(txn.createdAt).getFullYear() === today.getFullYear()
-      );
-      previousTransactions = transactions.filter(
-        (txn: Transaction) =>
-          new Date(txn.createdAt).getFullYear() === lastYear.getFullYear()
+      previousTransactions = transactions.filter(txn =>
+        new Date(txn.createdAt).getFullYear() === lastYear.getFullYear()
       );
     }
 
-    let issued = 0;
-    let prevIssued = 0;
-    let redeemed = 0;
-    let prevRedeemed = 0;
-
-    let totalRevenue = 0;
-    let prevTotalRevenue = 0;
-    let totalNetInput = 0;
-    let prevTotalNetInput = 0;
-    let uniqueCustomers = new Set<string>();
-    let prevUniqueCustomers = new Set<string>();
-
-    const groupTransactions: {
-      [key: string]: { issued: number; redeemed: number };
-    } = {};
-
-    filteredTransactions.forEach((txn: Transaction) => {
-      const txnDate = new Date(txn.createdAt).toLocaleDateString();
-      if (!groupTransactions[txnDate]) {
-        groupTransactions[txnDate] = { issued: 0, redeemed: 0 };
-      }
-      if (txn.type === "transaction") {
-        issued += txn.pointsEquivalent;
-        groupTransactions[txnDate].issued += txn.pointsEquivalent;
-      } else if (txn.type === "redemption") {
-        redeemed += txn.pointsEquivalent;
-        groupTransactions[txnDate].redeemed += txn.pointsEquivalent;
-      }
-      totalRevenue += txn.subtotal;
-      totalNetInput += (issued + redeemed) * 0.01;
-      uniqueCustomers.add(txn.userID);
-    });
-
-    previousTransactions.forEach((txn: Transaction) => {
-      if (txn.type === "transaction") {
-        prevIssued += txn.pointsEquivalent;
-      } else if (txn.type === "redemption") {
-        prevRedeemed += txn.pointsEquivalent;
-      }
-      prevTotalRevenue += txn.subtotal;
-      prevTotalNetInput += (prevIssued + prevRedeemed) * 0.01;
-      prevUniqueCustomers.add(txn.userID);
-    });
-
-    const calcPercentage = (current: number, previous: number) => {
-      if (previous === 0) return current === 0 ? 0 : 100;
-      return ((current - previous) / Math.abs(previous)) * 100;
+    let timeUnit = 'day';
+    if (filter === 'Monthly') {
+      timeUnit = 'day';
+    } else if (filter === 'Yearly') {
+      timeUnit = 'month';
+    } else if (filter === 'Today' || filter === 'Yesterday') {
+      timeUnit = 'hour';
     };
 
-    const issuedChange = calcPercentage(issued, prevIssued);
-    const redeemedChange = calcPercentage(redeemed, prevRedeemed);
-    const averageRevenueChange = calcPercentage(totalRevenue, prevTotalRevenue);
-    const netInputChange = calcPercentage(totalNetInput, prevTotalNetInput);
-    const netCustomersChange = calcPercentage(uniqueCustomers.size, prevUniqueCustomers.size);
+    const { labels, issuedData, redeemedData } = groupChartData(filteredTransactions, timeUnit);
 
-    dataLabels = Object.keys(groupTransactions);
-    issuedData = dataLabels.map((date) => groupTransactions[date].issued);
-    redeemedData = dataLabels.map((date) =>
-      Math.abs(groupTransactions[date].redeemed || 0)
-    );
+    const aggregateData = (transactions: Transaction[]) => {
+      const result = transactions.reduce((acc, txn) => {
+        if (txn.type === "transaction") {
+          acc.issued += txn.pointsEquivalent;
+        } else if (txn.type === "redemption") {
+          acc.redeemed += txn.pointsEquivalent;
+        }
+        acc.revenue += txn.subtotal;
+        acc.customers.add(txn.userID);
+        return acc;
+      },
+        { issued: 0, redeemed: 0, revenue: 0, customers: new Set() }
+      );
+      return result;
+    };
 
-    if (issuedData.length === 0) issuedData = [0];
-    if (redeemedData.length === 0) redeemedData = [0];
+    const currentData = aggregateData(filteredTransactions);
+    const previousData = aggregateData(previousTransactions);
 
-    setPointsIssued(issued);
+    const calcPercentageChange = (current: number, previous: number) => {
+      if (previous === 0) {
+        if (current === 0) {
+          return 0;
+        } else {
+          return 100;
+        }
+      } else {
+        return ((current - previous) / previous) * 100;
+      }
+    };
+
+    const issuedChange = calcPercentageChange(currentData.issued, previousData.issued);
+    const redeemedChange = calcPercentageChange(currentData.redeemed, previousData.redeemed);
+    const revenueChange = calcPercentageChange(currentData.revenue, previousData.revenue);
+    const netInputChange = calcPercentageChange((currentData.issued + currentData.redeemed) * 0.01,
+      (previousData.issued + previousData.redeemed) * 0.01);
+    const netCustomersChange = calcPercentageChange(currentData.customers.size, previousData.customers.size);
+
+    setPointsIssued(currentData.issued);
+    setPointsRedeemed(currentData.redeemed);
+    setAverageRevenue(currentData.revenue);
+    setNetInput((currentData.issued + currentData.redeemed) * 0.01);
+    setNetCustomers(currentData.customers.size);
+
     setIssuedChange(issuedChange);
-    setPointsRedeemed(redeemed);
     setRedeemedChange(redeemedChange);
-    setAverageRevenue(totalRevenue / (uniqueCustomers.size || 1));
-    setAverageRevenueChange(averageRevenueChange);
-    setNetInput(totalNetInput);
+    setAverageRevenueChange(revenueChange);
     setNetInputChange(netInputChange);
-    setNetCustomers(uniqueCustomers.size);
     setNetCustomersChange(netCustomersChange);
 
-    setChartData({
-      labels: dataLabels.length > 0 ? dataLabels : ["No Data"],
+    const lineChartData: LineChartData = {
+      labels,
       datasets: [
-        { data: issuedData.every((num) => isFinite(num)) ? issuedData : [0] },
         {
-          data: redeemedData.every((num) => isFinite(num)) ? redeemedData : [0],
+          data: issuedData,
+          color: (opacity = 1) => `rgba(233, 95, 35, ${opacity})`,
         },
-      ],
-    });
+        {
+          data: redeemedData,
+          color: (opacity = 1) => `rgba(128, 128, 128, ${opacity})`,
+        }
+      ]
+    };
+    setChartData(lineChartData);
   };
 
   useEffect(() => {
@@ -341,62 +355,112 @@ export default function HomeScreen() {
     );
   };
 
-  interface ChartData {
+  interface LegendItem {
+    label: string;
+    color: string;
+  }
+
+  interface LegendProps {
+    items: LegendItem[];
+  }
+
+  const Legend: React.FC<LegendProps> = ({ items }) => (
+    <View style={styles.legendContainer}>
+      {items.map((item, index) => (
+        <View
+          key={index}
+          style={styles.legendItemContainer}>
+          <View style={[
+            styles.legendItem,
+            { backgroundColor: item.color }
+          ]} />
+          <Text>
+            {item.label}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+
+  interface LineChartData {
     labels: string[];
     datasets: Array<{
       data: number[];
+      color?: (opacity?: number) => string;
     }>;
   }
 
   interface ChartProps {
-    data: ChartData;
+    data: LineChartData;
   }
 
   const CustomLineChart = ({ data }: ChartProps) => {
     const screenWidth = Dimensions.get("window").width;
+
     const chartConfig = {
+      useShadowColorFromDataset: true,
       backgroundColor: "#ffffff",
       backgroundGradientFrom: "#ffffff",
       backgroundGradientTo: "#ffffff",
-      decimalPlaces: 2,
-      color: (opacity = 1) => `rgba(233, 95, 35, ${opacity})`,
-      labelColor: (opacity = 1) => `rgba(128, 128, 128, ${opacity})`,
+      decimalPlaces: 0,
+      color: (opacity = 1, index = 0) => {
+        const colors = [`rgba(233, 95, 35, ${opacity})`, `rgba(128, 128, 128, ${opacity})`];
+        return colors[index % colors.length];
+      },
+      labelColor: (opacity = 1) => `rgba(72, 68, 68, ${opacity})`,
       style: {
         borderRadius: 16,
       },
       propsForDots: {
-        r: "6",
+        r: "5",
         strokeWidth: "1",
         stroke: "#ffffff",
       },
+      propsForBackgroundLines: {
+        stroke: `rgba(128, 128, 128, 0.5)`,
+      },
     };
 
-    if (!data.labels || data.labels.length === 0) {
-      return (
-        <Text style={{ textAlign: "center", padding: 10 }}>
-          No Data Available
-        </Text>
-      );
-    }
+    const legendItems = [
+      { label: "Points Issued", color: `rgba(233, 95, 35, 1)` },
+      { label: "Points Redeemed", color: `rgba(128, 128, 128, 1)` }
+    ];
 
+    const isEmpty = data.labels.length === 0 ||
+      data.datasets.every(dataset => dataset.data.length === 0 ||
+        dataset.data.every(item => item === 0));
+
+    if (isEmpty) {
+      return (
+        <View
+          style={[
+            styles.chartContainer,
+            { height: 240, justifyContent: 'center', alignItems: 'center' }
+          ]}>
+          <Text style={styles.noDataText}>
+            No Data Available
+          </Text>
+        </View>
+      );
+    };
     return (
-      <View style={styles.chartContainer}>
+      <View
+        style={styles.chartContainer}
+        key={isEmpty ? 'empty' : 'filled'}
+      >
+        <Legend items={legendItems}
+        />
         <LineChart
           data={data}
-          width={screenWidth - 40}
+          width={screenWidth - 50}
           height={220}
           chartConfig={chartConfig}
           bezier
-          style={{ borderRadius: chartConfig.style.borderRadius }}
+          style={{ ...styles.lineChart, borderRadius: chartConfig.style.borderRadius }}
         />
       </View>
     );
   };
-
-  const [chartData, setChartData] = useState<ChartData>({
-    labels: [],
-    datasets: [{ data: [] }, { data: [] }],
-  });
 
   const viewReportButton = () => {
     return (
@@ -505,7 +569,7 @@ export default function HomeScreen() {
         />
         <PointsDisplayCard
           title="POINTS REDEEMED"
-          points={pointsRedeemed.toLocaleString()}
+          points={Math.abs(pointsRedeemed).toLocaleString()}
           percentage={redeemedChange.toFixed(0)}
           increase={redeemedChange >= 0}
         />
@@ -578,7 +642,7 @@ export default function HomeScreen() {
         />
         <PointsDisplayCard
           title="POINTS REDEEMED"
-          points={pointsRedeemed.toLocaleString()}
+          points={Math.abs(pointsRedeemed).toLocaleString()}
           percentage={redeemedChange.toFixed(0)}
           increase={redeemedChange >= 0}
         />
@@ -651,7 +715,7 @@ export default function HomeScreen() {
         />
         <PointsDisplayCard
           title="POINTS REDEEMED"
-          points={pointsRedeemed.toLocaleString()}
+          points={Math.abs(pointsRedeemed).toLocaleString()}
           percentage={redeemedChange.toFixed(0)}
           increase={redeemedChange >= 0}
         />
@@ -724,7 +788,7 @@ export default function HomeScreen() {
         />
         <PointsDisplayCard
           title="POINTS REDEEMED"
-          points={pointsRedeemed.toLocaleString()}
+          points={Math.abs(pointsRedeemed).toLocaleString()}
           percentage={redeemedChange.toFixed(0)}
           increase={redeemedChange >= 0}
         />
@@ -956,6 +1020,33 @@ const styles = StyleSheet.create({
 
   //-------------- Chart Styling -----------------
 
+  legendContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    padding: 10
+  },
+  legendItemContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 15
+  },
+  legendItem: {
+    width: 10,
+    height: 10,
+    marginRight: 5
+  },
+  noDataText: {
+    textAlign: "center",
+    padding: 10,
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#757575",
+  },
+  lineChart: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginLeft: -20
+  },
   chartContainer: {
     padding: 10,
     margin: 15,
