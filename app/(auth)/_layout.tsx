@@ -23,6 +23,7 @@ export default function RootLayout() {
         <Stack.Screen name="editpromotion" options={{ headerShown: false, title: 'lol', headerTitle: 'Edit Promotion',  }} />
         <Stack.Screen name="awardpoints" options={{ headerShown: false, title: 'lol', headerTitle: 'Award Points',  }} />
         <Stack.Screen name="createpromotion" options={{ headerShown: false, title: 'lol', headerTitle: 'Create Promotion',  }} />
+        <Stack.Screen name="redeempoints" options={{ headerShown: false, title: 'lol', headerTitle: 'Redeem Points',  }} />
       </Stack>
     </ThemeProvider>
   );
