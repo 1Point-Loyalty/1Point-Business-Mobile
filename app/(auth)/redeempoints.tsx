@@ -14,10 +14,12 @@ import {
 } from "react-native";
 import PagerThemedView from "react-native-pager-view";
 import { useTheme } from "@/constants/ThemeCheck";
-import { Ionicons } from "@expo/vector-icons";
+import { Picker } from "@react-native-picker/picker";
 import { router } from "expo-router";
 import auth from "@react-native-firebase/auth";
 import { useLocalSearchParams } from "expo-router";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import LinearGradient from 'react-native-linear-gradient';
 
 export default function RedeemPoints() {
   const theme = useTheme();
@@ -25,6 +27,7 @@ export default function RedeemPoints() {
   const [subtotal, setSubtotal] = useState('0');
   const { userInfo: userInfoParam } = useLocalSearchParams();
   const userInfo = userInfoParam ? JSON.parse(userInfoParam as string) : null;
+  const userBalance = userInfo ? userInfo.balance : 100; 
 
   const createTransaction = async () => {
     if (!subtotal) {
@@ -82,35 +85,67 @@ export default function RedeemPoints() {
   };
 
   const renderPointPreview = () => {
-    const points = Math.floor(Number(subtotal));
+    const userDollar = Math.floor(Number(userBalance));
 
     return (
       <ThemedView style={[styles.PromotionSection, { backgroundColor: theme.colors.background }]}>
         <ThemedView style={{ backgroundColor: theme.colors.background }}>
           <ThemedView style={[styles.row, styles.shadowProp, { backgroundColor: theme.colors.notification }]}>
-            <View style={styles.imageContainer}>
-              <ThemedText style={styles.redeemText}>You are redeeming</ThemedText>
-              <ThemedText style={styles.pointText}>{points}</ThemedText>
-              <ThemedText style={styles.redeemText}>points to your customer</ThemedText>
-              <ThemedText style={styles.redeemText2}>${subtotal} to {points} points</ThemedText>
+            <View style={styles.imageContainer}> 
+             <ThemedText style={styles.pointText}>{'John Doe'}</ThemedText>
+              <ThemedText style={styles.redeemText}>Current Balance: {userBalance} points</ThemedText>
+              <ThemedText style={styles.redeemText2}>{userBalance} points valued at ${userDollar}</ThemedText>
             </View>
           </ThemedView>
         </ThemedView>
       </ThemedView>
     );
   };
+  
+  const renderTransactionPreview = () => {
+    const points = Math.floor(Number(subtotal));
+    const pointsValue = points;
+  
+  return (
+    <ThemedView style={[styles.PromotionSection, { backgroundColor: theme.colors.background }]}>
+        
+        <LinearGradient colors={['#FFFFFF', '#F0F0F0']} style={styles.orangeContainer}>
+          <ThemedText style={styles.cardTitle}>Redeeming</ThemedText>
+          <ThemedText style={styles.cardValue}>{points}</ThemedText>
+          <ThemedText style={styles.cardTitle}>points</ThemedText>
+        </LinearGradient>
+  
+        <View style={styles.iconContainer}>
+          <Ionicons name="swap-horizontal" size={25} color="rgb(230, 115, 57)" />
+        </View>
+        
+        <LinearGradient colors={['#FFFFFF', '#F0F0F0']} style={styles.orangeContainer}>
+          <ThemedText style={styles.cardTitle}>Points worth</ThemedText>
+          <ThemedText style={styles.cardValue}>${pointsValue}</ThemedText>
+          <ThemedText style={styles.cardTitle}>in value</ThemedText>
+        </LinearGradient>
+
+    </ThemedView>
+  );
+};
 
   const NumericInput = () => {
+    const amounts = [];
+    for (let i = 10; i <= userBalance; i += 10) {
+      amounts.push(i.toString());
+    }
+
     return (
       <View style={{ backgroundColor: theme.colors.background }}>
-        <TextInput
+        <Picker
+          selectedValue={subtotal}
           style={[styles.circularInput, { backgroundColor: theme.colors.card }]}
-          placeholder="Enter Amount"
-          placeholderTextColor="lightgray"
-          keyboardType='decimal-pad'
-          value={subtotal}
-          onChangeText={setSubtotal}
-        />
+          onValueChange={(itemValue: React.SetStateAction<string>) => setSubtotal(itemValue)}
+        >
+          {amounts.map((amount) => (
+            <Picker.Item key={amount} label={`$${amount}`} value={amount} />
+          ))}
+        </Picker>
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={[styles.button, styles.cancelButton]}
@@ -146,7 +181,7 @@ export default function RedeemPoints() {
           <ThemedView
             style={[styles.headerText, { backgroundColor: theme.colors.card }]}
           >
-            <ThemedText style={[styles.welcomeText]}>redeem Points</ThemedText>
+            <ThemedText style={[styles.welcomeText]}>Redeem Points</ThemedText>
           </ThemedView>
         </ThemedView>
         <ThemedView
@@ -155,9 +190,32 @@ export default function RedeemPoints() {
             { backgroundColor: theme.colors.background },
           ]}
         >
-
+        <ThemedText
+            style={[
+              styles.subHeadingText,
+              { backgroundColor: theme.colors.background },
+            ]}
+          >
+          CUSTOMER INFORMATION
+          </ThemedText>
           {renderPointPreview()}
+          
+          <ThemedText
+            style={[
+              styles.subHeadingText,
+              { backgroundColor: theme.colors.background },
+            ]}
+          >
+          TRANSACTION CONVERSION
+          </ThemedText>
 
+          {renderTransactionPreview()}
+<ThemedView style={[styles.row2, styles.iconTextContainer]}>
+          <View style={[styles.iconContainerSmall]}>
+  <Ionicons name="information-circle" size={16} color="rgb(230, 115, 57)" />
+  </View>
+  <ThemedText style={styles.noticeText}>Current conversion rate is 1 point = $0.01</ThemedText>
+       </ThemedView>
           <ThemedText
             style={[
               styles.subHeadingText,
@@ -175,6 +233,55 @@ export default function RedeemPoints() {
 }
 
 const styles = StyleSheet.create({
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 25, 
+    backgroundColor: "white", 
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 3,  
+    shadowColor: "#000", 
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    marginHorizontal: 20,
+  },
+  iconContainerSmall: {
+    width: 20,
+    height: 20,
+    borderRadius: 25, 
+    backgroundColor: "white", 
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 3,  
+    shadowColor: "#000", 
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    marginHorizontal: 10,
+  },
+  row2: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconTextContainer: {
+    marginVertical: 20,
+    backgroundColor: 'rgba(253, 84, 0, 0.2)',
+    borderRadius: 15,
+  },
+  noticeText: {
+    fontSize: 12,
+    color: 'black',
+    marginLeft: 2,
+  },
+  transactionContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%", 
+    paddingHorizontal: 10,
+  },
   numericButton: {
     marginTop: 10,
     padding: 10,
@@ -227,6 +334,33 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     fontSize: 20,
   },
+  orangeContainer: {
+    borderRadius: 15,
+    overflow: 'hidden',
+    padding: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '48%',
+    borderColor: 'rgb(230, 115, 57)',
+    borderWidth: 2,
+  },
+  cardSpacing: {
+    marginHorizontal: 3, 
+  },
+
+  cardTitle: {
+    fontSize: 16,
+    color: 'black',
+  },
+  cardValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'rgb(230, 115, 57)',
+    marginTop: 5,
+  },
+  arrowIcon: {
+    marginHorizontal: 3,
+  },
 
   //-------------- Main App styling -----------------
   main: {
@@ -270,9 +404,11 @@ const styles = StyleSheet.create({
   },
 
   PromotionSection: {
-    padding: "1%",
     flexDirection: 'row',
     justifyContent: 'space-evenly',
+    width: '100%',
+    alignItems: "center",
+    paddingHorizontal: 10,
   },
 
   imageContainer: {
@@ -284,6 +420,8 @@ const styles = StyleSheet.create({
     position: 'relative',
     width: 325,
     alignSelf: 'center',
+    borderColor: 'rgb(254, 224, 206)',
+    borderWidth: 5,
   },
 
   welcomeText: {
@@ -319,7 +457,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginHorizontal: "5%",
     marginBottom: 10,
-    marginVertical: "5%",
+    
     minHeight: 150,
     minWidth: "30%",
   },
@@ -357,10 +495,12 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+    marginTop: 15,
   },
   redeemText2: {
     color: 'white',
     fontSize: 12,
     fontWeight: 'bold',
+    marginTop: 5,
   },
 });
