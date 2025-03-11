@@ -36,7 +36,7 @@ export default function RedeemPoints() {
     }
 
     const customerId = userInfo.id;
-    const pointsEquivalent = Math.floor(Number(subtotal) * 1000);
+    const pointsEquivalent = Math.floor(Number(subtotal) * 100);
 
     const transactionData = {
       customerID: customerId,
@@ -94,7 +94,7 @@ export default function RedeemPoints() {
             <View style={styles.imageContainer}> 
              <ThemedText style={styles.pointText}>{userName}</ThemedText>
               <ThemedText style={styles.redeemText}>Current Balance: {userBalance} points</ThemedText>
-              <ThemedText style={styles.redeemText2}>{userBalance} points valued at ${userDollar}</ThemedText>
+              <ThemedText style={styles.redeemText2}>{userBalance} points valued at {userDollar} points</ThemedText>
             </View>
           </ThemedView>
         </ThemedView>
