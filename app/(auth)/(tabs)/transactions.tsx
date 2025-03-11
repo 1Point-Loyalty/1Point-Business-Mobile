@@ -57,7 +57,16 @@ export default function TransactionScreen() {
     transactionType: string;
   };
 
+  type insights = {
+    redemptionPoints: number;
+    transactionPoints: number;
+  };
+
   const [merchantId, setMerchantId] = useState<string | null>(null);
+  const [currentTransactionPoint, setCurrentTransactionPoint] = useState<number | null>(null);
+  const [currentRedemptionPoint, setCurrentRedemptionPoint] = useState<number | null>(null);
+  const [transactionPercentage, setTransactionPercentage] = useState<number | null>(null);
+  const [redemptionPercentage, setRedemptionPercentage] = useState<number | null>(null);
 
   const fetchMerchantId = async () => {
     try {
@@ -96,6 +105,39 @@ export default function TransactionScreen() {
     }
   };
 
+  const fetchMerchantInsights = async () => {
+    const user = auth().currentUser;
+    const userId = user?.uid;
+
+    const token = await user?.getIdToken();
+
+    fetch(`https://admin.1-point.ca/api/getMerchantInsights/${userId}`, {
+      method: "GET",
+      headers: {
+        contentType: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          setTimeout(() => {
+            return response.json();
+          },);
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        setCurrentRedemptionPoint(data.currentMonthRedemptionPoints);
+        setCurrentTransactionPoint(data.currentMonthTransactionPoints);
+        calculatePercentage(data.currentMonthTransactionPoints, data.currentMonthRedemptionPoints, data.previousMonthTransactionPoints, data.previousMonthRedemptionPoints);
+      })
+      .catch((error) => {
+        alert(`Error: ${error.message}`);
+        console.error(error);
+      });
+  }
+
   const [transactions, setTransactions] = useState<transaction[]>([]);
 
   const fetchTransactions = async (merchantId: string | null) => {
@@ -131,8 +173,6 @@ export default function TransactionScreen() {
           }
         });
         setTransactions(currTransactions);
-        console.log(transactions);
-        console.log(currTransactions[0].transactionCustomerId);
 
       })
       .catch((error) => {
@@ -146,11 +186,34 @@ export default function TransactionScreen() {
   }, []);
 
   useEffect(() => {
+    fetchMerchantInsights();
+  }, []);
+
+  useEffect(() => {
     if (merchantId) {
       fetchTransactions(merchantId);
     }
   }, [merchantId]);
 
+
+  const calculatePercentage = (currTransaction: number, currRedemption: number, prevTransaction: number, prevRedemption: number ) => {
+
+      if(currTransaction === 0 && prevTransaction === 0){
+        setTransactionPercentage(0);
+      }
+      else{
+        const transactionPercentageCalculation = ((currTransaction - prevTransaction) / prevTransaction) * 100;
+        setTransactionPercentage(Math.round(transactionPercentageCalculation));
+      }
+      if(currRedemption === 0 && prevRedemption === 0){
+        setRedemptionPercentage(0);
+      }
+      else{
+        const redemptionPercentageCalculation = ((currRedemption - prevRedemption) / prevRedemption) * 100;
+        setRedemptionPercentage(Math.round(redemptionPercentageCalculation));
+      }   
+    return 0;
+  };
   // Render the transactions section
   const renderTransactionPreview = () => {
     return (
@@ -169,7 +232,7 @@ export default function TransactionScreen() {
             ]}
           >
             <ThemedText style={styles.subHeading2Text}>
-              Total # Collected
+              Total # Redeemed
             </ThemedText>
             <ThemedView
               style={[
@@ -187,11 +250,11 @@ export default function TransactionScreen() {
                   { color: theme.colors.text },
                 ]}
               >
-                120
+                {currentRedemptionPoint}
               </ThemedText>
             </ThemedView>
-            <ThemedView style={styles.backLabelContainerUp}>
-              <ThemedText style={styles.backLabel}>+8% - Last Month</ThemedText>
+            <ThemedView style={redemptionPercentage !== null && redemptionPercentage < 0 ? styles.backLabelContainerDown : styles.backLabelContainerUp}>
+              <ThemedText style={redemptionPercentage !== null && redemptionPercentage < 0 ? styles.backLabelWhite : styles.backLabel}>{redemptionPercentage}% - Last Month</ThemedText>
             </ThemedView>
           </ThemedView>
         </ThemedView>
@@ -224,11 +287,11 @@ export default function TransactionScreen() {
                   { color: theme.colors.text },
                 ]}
               >
-                178
+                {currentTransactionPoint}
               </ThemedText>
             </ThemedView>
-            <ThemedView style={styles.backLabelContainerUp}>
-              <ThemedText style={styles.backLabel}>+2% - Last Month</ThemedText>
+            <ThemedView style={transactionPercentage !== null && transactionPercentage < 0 ? styles.backLabelContainerDown : styles.backLabelContainerUp}>
+              <ThemedText style={redemptionPercentage !== null && redemptionPercentage < 0 ? styles.backLabelWhite: styles.backLabel}>{transactionPercentage}% - Last Month</ThemedText>
             </ThemedView>
           </ThemedView>
         </ThemedView>
@@ -425,9 +488,9 @@ const styles = StyleSheet.create({
   //-------------- Transaction Preview Section styling -----------------
 
   transactionSection: {
-    padding: "1%",
     flexDirection: "row",
     justifyContent: "space-evenly",
+  alignItems: "center",
   },
 
   pointAmounts: {
@@ -439,11 +502,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-evenly",
     borderRadius: 16,
     alignItems: "center",
-    marginHorizontal: "5%",
     marginBottom: 10,
     marginVertical: "5%",
     minHeight: 150,
     minWidth: "30%",
+    width: 160,
+    elevation: 5,
   },
 
   shadowProp: {
@@ -475,3 +539,4 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
+
