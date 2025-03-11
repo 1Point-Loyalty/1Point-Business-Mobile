@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   useColorScheme,
   ScrollView,
+  TextInput,
 } from "react-native";
 import { useTheme } from "@/constants/ThemeCheck";
 import { TransactionRow } from "@/components/ReuseableComponents/TransactionRow";
@@ -55,6 +56,7 @@ export default function TransactionScreen() {
     transactionCustomerId: string;
     transactionStatus: string;
     transactionType: string;
+    id: number;
   };
 
   const [merchantId, setMerchantId] = useState<string | null>(null);
@@ -128,6 +130,7 @@ export default function TransactionScreen() {
             transactionCustomerId: transactionArray[index % transactionArray.length].transactionCustomerId, // transaction.transactionCustomerId,
             transactionStatus: transactionArray[index % transactionArray.length].transactionStatus, // transaction.transactionStatus,
             transactionType: transaction.type,
+            id: index
           }
         });
         setTransactions(currTransactions);
@@ -235,12 +238,32 @@ export default function TransactionScreen() {
     );
   };
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredTransactions, setFilteredTransactions] = useState(transactions);
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    const lowercasedQuery = query.toLowerCase();
+    const filtered = transactions.filter((transaction) => {
+      return (
+        transaction.transactionStatus.toLowerCase().includes(lowercasedQuery) ||
+        transaction.transactionCustomerId.toLowerCase().includes(lowercasedQuery) ||
+        transaction.transactionDate.toLowerCase().includes(lowercasedQuery) ||
+        transaction.transactionAmount.toString().toLowerCase().includes(lowercasedQuery) ||
+        transaction.transactionLocation.toLowerCase().includes(lowercasedQuery) ||
+        transaction.transactionType.toLowerCase().includes(lowercasedQuery)
+      );
+    });
+    setFilteredTransactions(filtered);
+  };
+
   const mapTransactions = () => {
     return (
       <ThemedView>
-        {transactions.map((transaction) => {
+        {filteredTransactions.map((transaction) => {
           return (
             <TransactionRow
+              key={transaction.id}
               transactionAmount={transaction.transactionAmount}
               transactionLocation={transaction.transactionLocation}
               transactionDate={transaction.transactionDate}
@@ -264,7 +287,6 @@ export default function TransactionScreen() {
     );
   };
 
-  // Render the home screen
   return (
     <SafeAreaView style={[styles.main, { backgroundColor: theme.colors.card }]}>
       <ThemedView
@@ -292,6 +314,17 @@ export default function TransactionScreen() {
             { backgroundColor: theme.colors.background },
           ]}
         >
+        
+      <ThemedView style={{ backgroundColor: theme.colors.background }}>
+      <TextInput
+        style={[styles.searchBar, { backgroundColor: "white" }]}
+        placeholder="Search transactions"
+        value={searchQuery}
+        onChangeText={handleSearch}
+      />
+     
+      
+    </ThemedView>
           <ThemedText style={styles.subHeadingText}>
             TRANSACTION PREVIEW
           </ThemedText>
@@ -471,5 +504,15 @@ const styles = StyleSheet.create({
   transactionText: {
     fontSize: 20,
     fontWeight: "bold",
+  },
+ 
+  searchBar: {
+    height: 40,
+    borderColor: 'black',
+    borderWidth: 1,
+    borderRadius: 25,
+    paddingHorizontal: 10,
+    marginBottom: 10,
+    marginTop: 10,
   },
 });
