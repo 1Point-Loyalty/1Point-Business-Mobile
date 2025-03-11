@@ -86,7 +86,7 @@ export default function RedeemPoints() {
   };
 
   const renderPointPreview = () => {
-    const userDollar = Math.floor(Number(userBalance));
+    const userDollar = Math.floor(Number(userBalance) / 100);
 
     return (
       <ThemedView style={[styles.PromotionSection, { backgroundColor: theme.colors.background }]}>
@@ -95,7 +95,7 @@ export default function RedeemPoints() {
             <View style={styles.imageContainer}> 
              <ThemedText style={styles.pointText}>{userName}</ThemedText>
               <ThemedText style={styles.redeemText}>Current Balance: {userBalance} points</ThemedText>
-              <ThemedText style={styles.redeemText2}>{userBalance} points valued at {userDollar} points</ThemedText>
+              <ThemedText style={styles.redeemText2}>{userBalance} points valued at ${userDollar}</ThemedText>
             </View>
           </ThemedView>
         </ThemedView>
