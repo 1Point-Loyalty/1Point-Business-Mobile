@@ -132,7 +132,7 @@ export default function RedeemPoints() {
 
   const NumericInput = () => {
     const amounts = [];
-    for (let i = 10; i <= userBalance; i += 10) {
+    for (let i = 10; i <= userBalance / 100; i += 10) {
       amounts.push(i.toString());
     }
 
