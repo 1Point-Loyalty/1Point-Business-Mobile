@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import PhoneInput from "react-native-phone-input";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import auth from "@react-native-firebase/auth";
 import { FirebaseError } from "firebase/app";
@@ -25,19 +25,19 @@ export default function SignUp() {
   // State variables for form inputs
   const [fullName, setFullName] = useState("");
   const [fullNameError, setFullNameError] = useState("");
+  const [fullNameColor, setFullNameColor] = useState("#a1a09c")
 
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [phoneNumberError, setPhoneNumberError] = useState("")
+  const [phoneNumberColor, setPhoneNumberColor] = useState("#a1a09c");
 
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [emailColor, setEmailColor] = useState("#a1a09c")
 
   const [password, setPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-
-  const [isSelected, setSelection] = useState(false);
-
-  const [textColor, setTextColor] = useState("black");
-  const [phoneTextColor, setPhoneTextColor] = useState("black");
+  const [passwordError, setPasswordError] = useState<string[]>([]);
+  const [passwordColor, setPasswordColor] = useState("#a1a09c")
 
   navigation.setOptions({ headerShown: false });
 
@@ -53,24 +53,31 @@ export default function SignUp() {
   ];
 
   // Function to validate full name input
-  const handleFullName = () => {
-    const splitName = fullName.split(" ");
+  const handleFullName = (fullName: string) => {
+    setFullName(fullName)
+    const name = fullName.trim().split(" ");
 
-    if (
-      splitName.length !== 2 ||
-      splitName[0].length < 2 ||
-      splitName[1].length < 2
-    ) {
-      setFullNameError("Please enter a valid first and last name");
-    } else {
-      setFullNameError("");
+    if (name.length === 1) {
+      setFullNameError(`Please enter your ${name[0].length >= 2 ? "last" : "first"} name`);
+      setFullNameColor("red");
+      return false;
     }
+    if (name.length > 1) {
+      if (name[0].length < 2 || name[1].length < 2) {
+        setFullNameError("Both names must be at least 2 characters long");
+        setFullNameColor("red");
+        return false;
+      }
+    }
+    setFullNameError("");
+    setFullNameColor("#a1a09c");
+    return true;
   };
 
   // Function to format phone number input
-  const formatPhoneNumber = (number: string) => {
+  const formatPhoneNumber = (phoneNumber: string) => {
     // Remove all non-digit characters
-    const cleaned = ("" + number).replace(/\D/g, "");
+    const cleaned = ("" + phoneNumber).replace(/\D/g, "");
     // Limit to 10 digits
     const limited = cleaned.substring(0, 10);
     // Format the number with hyphens
@@ -82,82 +89,91 @@ export default function SignUp() {
   };
 
   // Function to validate phone number input
-  const handlePhoneNumberChange = (number: string) => {
+  const handlePhoneNumberChange = (phoneNumber: string) => {
     const phonePattern = /^\d{3}-\d{3}-\d{4}$/;
-    setPhoneNumber(number);
-    const formattedNumber = formatPhoneNumber(number);
+    setPhoneNumber(phoneNumber);
+
+    const formattedNumber = formatPhoneNumber(phoneNumber);
     setPhoneNumber(formattedNumber);
-    if (phonePattern.test(formattedNumber) === false) {
-      setPhoneTextColor("red");
-    } else {
-      setPhoneTextColor("black");
+
+    if (!phonePattern.test(formattedNumber)) {
+      setPhoneNumberError("Phone number must be exactly 10 digits long");
+      setPhoneNumberColor("red");
+      return false;
     }
+    setPhoneNumberError("");
+    setPhoneNumberColor("#a1a09c");
+    return true;
   };
 
   // Function to validate email input
-  const handleEmail = () => {
+  const handleEmail = (email: string) => {
+    setEmail(email);
+
+    if (!email) {
+      setEmailError("Please enter your email address");
+      setEmailColor("red");
+      return false;
+    }
+    if (email.split("@").length - 1 !== 1) {
+      setEmailError("An email address must contain a single @");
+      setEmailColor("red");
+      return false;
+    }
     // format for email: characters@characters.characters
     let emailFormat = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w\w+)+$/;
     if (emailFormat.test(email) === false) {
       setEmailError("Please enter a valid email address");
-    } else {
-      setEmailError("");
+      setEmailColor("red");
+      return false;
     }
-  };
-
-  // Function to validate terms of service checkbox
-  const handleTerms = () => {
-    if (isSelected === false) {
-      setTextColor("red");
-    } else {
-      setTextColor("black");
-    }
+    setEmailError("");
+    setEmailColor("#a1a09c");
+    return true;
   };
 
   // Function to validate password input
-  const handlePassword = () => {
-    let numberCheck = /\d/;
-    let upperCaseCheck = /[A-Z]/;
-    let lowerCaseCheck = /[a-z]/;
-    let specialCharCheck = /[!@#$%^&*_]/;
+  const handlePassword = (password: string) => {
+    setPassword(password);
 
-    // password must meet all the criteria
-    if (
-      password.length < 8 ||
-      !numberCheck.test(password) ||
-      !upperCaseCheck.test(password) ||
-      !lowerCaseCheck.test(password) ||
-      !specialCharCheck.test(password)
-    ) {
-      setPasswordError(
-        "Password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, a number, and a special character"
-      );
-    } else {
-      setPasswordError("");
+    let errors = [];
+    if (password.length < 8) {
+      errors.push("At least 8 characters");
     }
-  };
-
-  const handlePhoneNumber = () => {
-    const phonePattern = /^\d{3}-\d{3}-\d{4}$/;
-    if (phonePattern.test(phoneNumber) === false) {
-      setPhoneTextColor("red");
-    } else {
-      setPhoneTextColor("black");
+    if (!/[a-z]/.test(password)) {
+      errors.push("Contains one lowercase letter");
     }
+    if (!/[A-Z]/.test(password)) {
+      errors.push("Contains one uppercase letter");
+    }
+    if (!/\d/.test(password)) {
+      errors.push("Contains one number");
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>_]/.test(password)) {
+      errors.push("Contains one special character (@, #, $, etc.)");
+    }
+    setPasswordError(errors);
+    setPasswordColor(errors.length > 0 ? "red" : "#a1a09c");
+    return errors.length === 0;
   };
 
   // Function to handle registration
   const handleRegister = () => {
-    handleFullName();
-    handlePhoneNumber();
-    handleEmail();
-    handlePassword();
-    handleTerms();
+    const fullNameValid = handleFullName(fullName);
+    const phoneNumberValid = handlePhoneNumberChange(phoneNumber);
+    const emailValid = handleEmail(email);
+    const passwordValid = handlePassword(password);
+
+    return fullNameValid &&
+      phoneNumberValid &&
+      emailValid &&
+      passwordValid
   };
 
   const signUp = async () => {
-    if (!email || !password) {
-      alert("Email and password must not be empty.");
+    const valid = handleRegister();
+    if (!valid) {
+      alert("Please correct the errors or fill all required fields before proceeding.");
       return;
     }
 
@@ -166,7 +182,7 @@ export default function SignUp() {
       handleCreateUser()
     } catch (e: any) {
       const err = e as FirebaseError;
-      alert("Sign in failed: " + err.message);
+      alert("Sign up failed: " + err.message);
     }
   };
 
@@ -195,11 +211,11 @@ export default function SignUp() {
           "lastName": last,
           "email": email,
           "phoneNumber": phoneNumber,
-          "isBO": 0,
+          "isBO": 1
         }),
       }
     );
-    
+
     const result = await response.json();
     console.log(result)
     if (response.ok) {
@@ -215,7 +231,12 @@ export default function SignUp() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.card }]}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.colors.card }
+      ]}
+    >
       <Image
         source={require("@/assets/images/1Point_Logo.png")}
         style={styles.logo}
@@ -224,35 +245,62 @@ export default function SignUp() {
       <Text style={styles.subHeader}>
         Sign up to start your journey with us
       </Text>
-      <TextInput
-        accessibilityLabel="name input"
-        placeholder="Full Name"
-        style={styles.input}
-        onChangeText={setFullName}
-      />
-      <PhoneInput
-        initialCountry="ca"
-        countriesList={countriesList}
-        textProps={{
-          placeholder: "Phone Number",
-          value: phoneNumber,
-          onChangeText: handlePhoneNumberChange,
-        }}
-        style={styles.input}
-      />
-      <TextInput
-        accessibilityLabel="email input"
-        placeholder="Email"
-        style={styles.input}
-        onChangeText={setEmail}
-      />
-      <TextInput
-        accessibilityLabel="password input"
-        placeholder="Password"
-        secureTextEntry={true}
-        style={styles.input}
-        onChangeText={setPassword}
-      />
+      <View
+        style={styles.inputWrapper}
+      >
+        <TextInput
+          accessibilityLabel="name input"
+          placeholder="Full Name"
+          style={[styles.input, { borderColor: fullNameColor }]}
+          onChangeText={handleFullName}
+          value={fullName}
+        />
+        {fullNameError && <Text style={styles.errorText}>{fullNameError}</Text>}
+      </View>
+      <View
+        style={styles.inputWrapper}
+      >
+        <PhoneInput
+          initialCountry="ca"
+          countriesList={countriesList}
+          textProps={{
+            placeholder: "Phone Number",
+            value: phoneNumber,
+            onChangeText: handlePhoneNumberChange,
+          }}
+          style={[styles.input, { borderColor: phoneNumberColor }]}
+        />
+        {phoneNumberError && <Text style={styles.errorText}>{phoneNumberError}</Text>}
+      </View>
+      <View
+        style={styles.inputWrapper}
+      >
+        <TextInput
+          accessibilityLabel="email input"
+          placeholder="Email"
+          style={[styles.input, { borderColor: emailColor }]}
+          onChangeText={handleEmail}
+          value={email}
+        />
+        {emailError && <Text style={styles.errorText}>{emailError}</Text>}
+      </View>
+      <View
+        style={styles.inputWrapper}
+      >
+        <TextInput
+          accessibilityLabel="password input"
+          placeholder="Password"
+          secureTextEntry={true}
+          style={[styles.input, { borderColor: passwordColor }]}
+          onChangeText={handlePassword}
+          value={password}
+        />
+        {passwordError.map((error, index) => (
+          <Text key={index} style={styles.errorText}>
+            {error}
+          </Text>
+        ))}
+      </View>
       <TouchableOpacity
         accessibilityLabel="signup button"
         style={styles.button}
@@ -280,6 +328,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 20,
   },
+  inputWrapper: {
+    width: "95%",
+    marginBottom: 10,
+  },
   header: {
     fontSize: 50,
     fontWeight: "bold",
@@ -298,9 +350,7 @@ const styles = StyleSheet.create({
     width: "95%",
   },
   input: {
-    width: "95%",
     height: 40,
-    marginBottom: 12,
     borderWidth: 1,
     borderColor: "#a1a09c",
     padding: 10,
@@ -335,4 +385,10 @@ const styles = StyleSheet.create({
     color: "#E95F23",
     fontWeight: "bold",
   },
+  errorText: {
+    fontSize: 12,
+    color: 'red',
+    marginBottom: 1,
+    marginTop: 1,
+  }
 });
