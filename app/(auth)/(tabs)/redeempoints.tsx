@@ -27,7 +27,8 @@ export default function RedeemPoints() {
   const [subtotal, setSubtotal] = useState('0');
   const { userInfo: userInfoParam } = useLocalSearchParams();
   const userInfo = userInfoParam ? JSON.parse(userInfoParam as string) : null;
-  const userBalance = userInfo ? userInfo.balance : 100; 
+  const userBalance = userInfo ? userInfo.currentPoints : 0;
+  const userName = userInfo ? userInfo.firstName + " " + userInfo.lastName : "John Doe"; 
 
   const createTransaction = async () => {
     if (!subtotal) {
@@ -92,7 +93,7 @@ export default function RedeemPoints() {
         <ThemedView style={{ backgroundColor: theme.colors.background }}>
           <ThemedView style={[styles.row, styles.shadowProp, { backgroundColor: theme.colors.notification }]}>
             <View style={styles.imageContainer}> 
-             <ThemedText style={styles.pointText}>{'John Doe'}</ThemedText>
+             <ThemedText style={styles.pointText}>{userName}</ThemedText>
               <ThemedText style={styles.redeemText}>Current Balance: {userBalance} points</ThemedText>
               <ThemedText style={styles.redeemText2}>{userBalance} points valued at ${userDollar}</ThemedText>
             </View>
