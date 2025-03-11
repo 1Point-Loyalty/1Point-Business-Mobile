@@ -37,7 +37,7 @@ export default function RedeemPoints() {
     }
 
     const customerId = userInfo.id;
-    const pointsEquivalent = Math.floor(Number(subtotal));
+    const pointsEquivalent = Math.floor(Number(subtotal) * 1000);
 
     const transactionData = {
       customerID: customerId,
