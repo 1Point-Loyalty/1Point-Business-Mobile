@@ -125,13 +125,14 @@ export default function TransactionScreen() {
             transactionAmount: transaction.pointsEquivalent,
             transactionLocation: transaction.merchant_name,
             transactionDate: (transaction.createdAt).split('T')[0],
-            transactionCustomerId: transactionArray[index % transactionArray.length].transactionCustomerId, // transaction.transactionCustomerId,
-            transactionStatus: transactionArray[index % transactionArray.length].transactionStatus, // transaction.transactionStatus,
+            transactionCustomerId: transaction.phoneNumber, 
+            transactionStatus: transaction.status, 
             transactionType: transaction.type,
           }
         });
         setTransactions(currTransactions);
         console.log(transactions);
+        console.log(currTransactions[0].transactionCustomerId);
 
       })
       .catch((error) => {
@@ -246,6 +247,7 @@ export default function TransactionScreen() {
               transactionDate={transaction.transactionDate}
               transactionCustomerId={transaction.transactionCustomerId}
               transactionStatus={transaction.transactionStatus}
+              transactionType={transaction.transactionType}
             />
           );
         })}
