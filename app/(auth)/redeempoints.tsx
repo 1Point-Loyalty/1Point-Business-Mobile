@@ -75,11 +75,11 @@ export default function RedeemPoints() {
         throw new Error(`API Error: ${response.status} - ${responseText}`);
       }
 
-      Alert.alert("Success", "Transaction successfully recorded.");
+      Alert.alert("Success", "Redemption successfully recorded.");
       setSubtotal("0");
 
     } catch (error) {
-      Alert.alert("Error", "Failed to post transaction. Please try again.");
+      Alert.alert("Error", "Failed to post redemption. Please try again.");
     } finally {
       setLoading(false);
     }
