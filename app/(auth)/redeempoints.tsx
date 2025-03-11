@@ -60,7 +60,7 @@ export default function RedeemPoints() {
       }
 
       const userId = currentUser.uid;
-      const apiURL = `https://admin.1-point.ca/api/createMerchantTransaction/${userId}`;
+      const apiURL = `https://admin.1-point.ca/api/createMerchantRedemption/${userId}`;
       const response = await fetch(apiURL, {
         method: "POST",
         headers: {
