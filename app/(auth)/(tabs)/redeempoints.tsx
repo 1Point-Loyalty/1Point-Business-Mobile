@@ -19,7 +19,6 @@ import { router } from "expo-router";
 import auth from "@react-native-firebase/auth";
 import { useLocalSearchParams } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import LinearGradient from 'react-native-linear-gradient';
 
 export default function RedeemPoints() {
   const theme = useTheme();
@@ -110,21 +109,21 @@ export default function RedeemPoints() {
   return (
     <ThemedView style={[styles.PromotionSection, { backgroundColor: theme.colors.background }]}>
         
-        <LinearGradient colors={['#FFFFFF', '#F0F0F0']} style={styles.orangeContainer}>
+        <ThemedView style={[styles.orangeContainer, {backgroundColor: theme.colors.card}]}>
           <ThemedText style={styles.cardTitle}>Redeeming</ThemedText>
           <ThemedText style={styles.cardValue}>{points}</ThemedText>
           <ThemedText style={styles.cardTitle}>points</ThemedText>
-        </LinearGradient>
+        </ThemedView>
   
         <View style={styles.iconContainer}>
           <Ionicons name="swap-horizontal" size={25} color="rgb(230, 115, 57)" />
         </View>
         
-        <LinearGradient colors={['#FFFFFF', '#F0F0F0']} style={styles.orangeContainer}>
+        <ThemedView style={[styles.orangeContainer, {backgroundColor: theme.colors.card}]}>
           <ThemedText style={styles.cardTitle}>Points worth</ThemedText>
           <ThemedText style={styles.cardValue}>${pointsValue}</ThemedText>
           <ThemedText style={styles.cardTitle}>in value</ThemedText>
-        </LinearGradient>
+        </ThemedView>
 
     </ThemedView>
   );
