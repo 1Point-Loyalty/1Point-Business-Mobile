@@ -215,7 +215,7 @@ export default function RedeemPoints() {
           <View style={[styles.iconContainerSmall]}>
   <Ionicons name="information-circle" size={16} color="rgb(230, 115, 57)" />
   </View>
-  <ThemedText style={styles.noticeText}>Current conversion rate is 1 point = $0.01</ThemedText>
+  <ThemedText style={styles.noticeText}>The conversion rate is 1 point = $0.01</ThemedText>
        </ThemedView>
           <ThemedText
             style={[
