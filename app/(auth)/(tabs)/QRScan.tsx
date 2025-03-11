@@ -125,13 +125,15 @@ import { router } from "expo-router";
 
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionButton}
+          <TouchableOpacity style={[styles.actionButton, userInfo.currentPoints < 1000 && styles.disabledButton]}
           onPress={() => {
             router.navigate({
               pathname: "../redeempoints",
               params: { userInfo: JSON.stringify(userInfo) },
             });
-          }}>
+          }}
+          disabled={userInfo.currentPoints < 1000}
+          >
             <Text style={styles.buttonText}>Redeem Points</Text>
           </TouchableOpacity>
         </View>
@@ -248,6 +250,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 20,
     width: "95%",
+  },
+  disabledButton: {
+    backgroundColor: "#d3d3d3",
+    borderColor: "#d3d3d3",
+    borderWidth: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    width: "45%",
+    alignItems: "center",
   },
   scanAgainText: {
     color: "#ffffff",
