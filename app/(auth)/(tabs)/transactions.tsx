@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   useColorScheme,
   ScrollView,
+  RefreshControl, // Import RefreshControl
 } from "react-native";
 import { useTheme } from "@/constants/ThemeCheck";
 import { TransactionRow } from "@/components/ReuseableComponents/TransactionRow";
@@ -16,6 +17,8 @@ import auth from "@react-native-firebase/auth";
 
 export default function TransactionScreen() {
   const theme = useTheme();
+
+  const [refreshing, setRefreshing] = useState(false); // State for refreshing
 
   const transactionArray = [
     {
@@ -238,6 +241,17 @@ export default function TransactionScreen() {
     }
     return 0;
   };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchMerchantId();
+    await fetchMerchantInsights();
+    if (merchantId) {
+      await fetchTransactions(merchantId);
+    }
+    setRefreshing(false);
+  };
+
   // Render the transactions section
   const renderTransactionPreview = () => {
     return (
@@ -410,6 +424,9 @@ export default function TransactionScreen() {
             styles.mainContainer,
             { backgroundColor: theme.colors.background },
           ]}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
         >
           <ThemedText style={styles.subHeadingText}>
             TRANSACTION PREVIEW
