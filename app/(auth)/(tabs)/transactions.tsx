@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { useTheme } from "@/constants/ThemeCheck";
 import { TransactionRow } from "@/components/ReuseableComponents/TransactionRow";
-import auth from "@react-native-firebase/auth"
+import auth from "@react-native-firebase/auth";
 
 export default function TransactionScreen() {
   const theme = useTheme();
@@ -45,12 +45,12 @@ export default function TransactionScreen() {
       transactionDate: "12/12/2021",
       transactionCustomerId: "1238888888",
       transactionStatus: "Complete",
-    }
+    },
   ];
 
   type transaction = {
     transactionAmount: number;
-    transactionLocation: string;
+    transactionSubtotal: string;
     transactionDate: string;
     transactionCustomerId: string;
     transactionStatus: string;
@@ -63,10 +63,18 @@ export default function TransactionScreen() {
   };
 
   const [merchantId, setMerchantId] = useState<string | null>(null);
-  const [currentTransactionPoint, setCurrentTransactionPoint] = useState<number | null>(null);
-  const [currentRedemptionPoint, setCurrentRedemptionPoint] = useState<number | null>(null);
-  const [transactionPercentage, setTransactionPercentage] = useState<number | null>(null);
-  const [redemptionPercentage, setRedemptionPercentage] = useState<number | null>(null);
+  const [currentTransactionPoint, setCurrentTransactionPoint] = useState<
+    number | null
+  >(null);
+  const [currentRedemptionPoint, setCurrentRedemptionPoint] = useState<
+    number | null
+  >(null);
+  const [transactionPercentage, setTransactionPercentage] = useState<
+    number | null
+  >(null);
+  const [redemptionPercentage, setRedemptionPercentage] = useState<
+    number | null
+  >(null);
 
   const fetchMerchantId = async () => {
     try {
@@ -94,12 +102,16 @@ export default function TransactionScreen() {
 
       const userData = await response.json();
       setTimeout(() => {
-        if (Array.isArray(userData) && userData.length > 0 && userData[0].merchantID) {
+        if (
+          Array.isArray(userData) &&
+          userData.length > 0 &&
+          userData[0].merchantID
+        ) {
           setMerchantId(userData[0].merchantID);
         } else {
           console.warn("No merchantID found.");
         }
-      }, );
+      });
     } catch (error) {
       console.error("Error fetching merchantId:", error);
     }
@@ -122,7 +134,7 @@ export default function TransactionScreen() {
         if (!response.ok) {
           setTimeout(() => {
             return response.json();
-          },);
+          });
           throw new Error("Network response was not ok");
         }
         return response.json();
@@ -130,13 +142,18 @@ export default function TransactionScreen() {
       .then((data) => {
         setCurrentRedemptionPoint(data.currentMonthRedemptionPoints);
         setCurrentTransactionPoint(data.currentMonthTransactionPoints);
-        calculatePercentage(data.currentMonthTransactionPoints, data.currentMonthRedemptionPoints, data.previousMonthTransactionPoints, data.previousMonthRedemptionPoints);
+        calculatePercentage(
+          data.currentMonthTransactionPoints,
+          data.currentMonthRedemptionPoints,
+          data.previousMonthTransactionPoints,
+          data.previousMonthRedemptionPoints
+        );
       })
       .catch((error) => {
         alert(`Error: ${error.message}`);
         console.error(error);
       });
-  }
+  };
 
   const [transactions, setTransactions] = useState<transaction[]>([]);
 
@@ -145,41 +162,45 @@ export default function TransactionScreen() {
 
     const token = await user?.getIdToken();
 
-    fetch(`https://admin.1-point.ca/api/getMerchantTransactions/${merchantId}`, {
-      method: "GET",
-      headers: {
-        contentType: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    fetch(
+      `https://admin.1-point.ca/api/getMerchantTransactions/${merchantId}`,
+      {
+        method: "GET",
+        headers: {
+          contentType: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    )
       .then((response) => {
         if (!response.ok) {
           setTimeout(() => {
             return response.json();
-          },);
+          });
           throw new Error("Network response was not ok");
         }
         return response.json();
       })
       .then((data: any[]) => {
-        const currTransactions: transaction[] = data.map((transaction, index) => {
-          return {
-            transactionAmount: transaction.pointsEquivalent,
-            transactionLocation: transaction.merchant_name,
-            transactionDate: (transaction.createdAt).split('T')[0],
-            transactionCustomerId: transaction.phoneNumber, 
-            transactionStatus: transaction.status, 
-            transactionType: transaction.type,
+        const currTransactions: transaction[] = data.map(
+          (transaction, index) => {
+            return {
+              transactionAmount: transaction.pointsEquivalent,
+              transactionSubtotal: transaction.subtotal,
+              transactionDate: transaction.createdAt.split("T")[0],
+              transactionCustomerId: transaction.phoneNumber,
+              transactionStatus: transaction.status,
+              transactionType: transaction.type,
+            };
           }
-        });
+        );
         setTransactions(currTransactions);
-
       })
       .catch((error) => {
         alert(`Error: ${error.message}`);
         console.error(error);
       });
-  }
+  };
 
   useEffect(() => {
     fetchMerchantId();
@@ -195,23 +216,26 @@ export default function TransactionScreen() {
     }
   }, [merchantId]);
 
-
-  const calculatePercentage = (currTransaction: number, currRedemption: number, prevTransaction: number, prevRedemption: number ) => {
-
-      if(currTransaction === 0 && prevTransaction === 0){
-        setTransactionPercentage(0);
-      }
-      else{
-        const transactionPercentageCalculation = ((currTransaction - prevTransaction) / prevTransaction) * 100;
-        setTransactionPercentage(Math.round(transactionPercentageCalculation));
-      }
-      if(currRedemption === 0 && prevRedemption === 0){
-        setRedemptionPercentage(0);
-      }
-      else{
-        const redemptionPercentageCalculation = ((currRedemption - prevRedemption) / prevRedemption) * 100;
-        setRedemptionPercentage(Math.round(redemptionPercentageCalculation));
-      }   
+  const calculatePercentage = (
+    currTransaction: number,
+    currRedemption: number,
+    prevTransaction: number,
+    prevRedemption: number
+  ) => {
+    if (currTransaction === 0 && prevTransaction === 0) {
+      setTransactionPercentage(0);
+    } else {
+      const transactionPercentageCalculation =
+        ((currTransaction - prevTransaction) / prevTransaction) * 100;
+      setTransactionPercentage(Math.round(transactionPercentageCalculation));
+    }
+    if (currRedemption === 0 && prevRedemption === 0) {
+      setRedemptionPercentage(0);
+    } else {
+      const redemptionPercentageCalculation =
+        ((currRedemption - prevRedemption) / prevRedemption) * 100;
+      setRedemptionPercentage(Math.round(redemptionPercentageCalculation));
+    }
     return 0;
   };
   // Render the transactions section
@@ -253,8 +277,22 @@ export default function TransactionScreen() {
                 {currentRedemptionPoint}
               </ThemedText>
             </ThemedView>
-            <ThemedView style={redemptionPercentage !== null && redemptionPercentage < 0 ? styles.backLabelContainerDown : styles.backLabelContainerUp}>
-              <ThemedText style={redemptionPercentage !== null && redemptionPercentage < 0 ? styles.backLabelWhite : styles.backLabel}>{redemptionPercentage}% - Last Month</ThemedText>
+            <ThemedView
+              style={
+                redemptionPercentage !== null && redemptionPercentage < 0
+                  ? styles.backLabelContainerDown
+                  : styles.backLabelContainerUp
+              }
+            >
+              <ThemedText
+                style={
+                  redemptionPercentage !== null && redemptionPercentage < 0
+                    ? styles.backLabelWhite
+                    : styles.backLabel
+                }
+              >
+                {redemptionPercentage}% - Last Month
+              </ThemedText>
             </ThemedView>
           </ThemedView>
         </ThemedView>
@@ -290,8 +328,22 @@ export default function TransactionScreen() {
                 {currentTransactionPoint}
               </ThemedText>
             </ThemedView>
-            <ThemedView style={transactionPercentage !== null && transactionPercentage < 0 ? styles.backLabelContainerDown : styles.backLabelContainerUp}>
-              <ThemedText style={redemptionPercentage !== null && redemptionPercentage < 0 ? styles.backLabelWhite: styles.backLabel}>{transactionPercentage}% - Last Month</ThemedText>
+            <ThemedView
+              style={
+                transactionPercentage !== null && transactionPercentage < 0
+                  ? styles.backLabelContainerDown
+                  : styles.backLabelContainerUp
+              }
+            >
+              <ThemedText
+                style={
+                  redemptionPercentage !== null && redemptionPercentage < 0
+                    ? styles.backLabelWhite
+                    : styles.backLabel
+                }
+              >
+                {transactionPercentage}% - Last Month
+              </ThemedText>
             </ThemedView>
           </ThemedView>
         </ThemedView>
@@ -306,7 +358,9 @@ export default function TransactionScreen() {
           return (
             <TransactionRow
               transactionAmount={transaction.transactionAmount}
-              transactionLocation={transaction.transactionLocation}
+              transactionSubtotal={parseFloat(transaction.transactionSubtotal)
+                .toFixed(2)
+                .toString()}
               transactionDate={transaction.transactionDate}
               transactionCustomerId={transaction.transactionCustomerId}
               transactionStatus={transaction.transactionStatus}
@@ -490,7 +544,7 @@ const styles = StyleSheet.create({
   transactionSection: {
     flexDirection: "row",
     justifyContent: "space-evenly",
-  alignItems: "center",
+    alignItems: "center",
   },
 
   pointAmounts: {
@@ -539,4 +593,3 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
-
