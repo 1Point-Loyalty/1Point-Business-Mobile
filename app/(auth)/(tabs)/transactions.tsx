@@ -9,7 +9,7 @@ import {
   SafeAreaView,
   useColorScheme,
   ScrollView,
-  RefreshControl, // Import RefreshControl
+  RefreshControl,
 } from "react-native";
 import { useTheme } from "@/constants/ThemeCheck";
 import { TransactionRow } from "@/components/ReuseableComponents/TransactionRow";
@@ -18,7 +18,7 @@ import auth from "@react-native-firebase/auth";
 export default function TransactionScreen() {
   const theme = useTheme();
 
-  const [refreshing, setRefreshing] = useState(false); // State for refreshing
+  const [refreshing, setRefreshing] = useState(false);
 
   const transactionArray = [
     {
