@@ -260,18 +260,34 @@ export default function TransactionScreen() {
   const mapTransactions = () => {
     return (
       <ThemedView>
-        {filteredTransactions.map((transaction) => {
-          return (
-            <TransactionRow
-              key={transaction.id}
-              transactionAmount={transaction.transactionAmount}
-              transactionLocation={transaction.transactionLocation}
-              transactionDate={transaction.transactionDate}
-              transactionCustomerId={transaction.transactionCustomerId}
-              transactionStatus={transaction.transactionStatus}
-            />
-          );
-        })}
+        {!searchQuery ? (
+  transactions.map((transaction) => {
+    return (
+      <TransactionRow
+        key={transaction.id}
+        transactionAmount={transaction.transactionAmount}
+        transactionLocation={transaction.transactionLocation}
+        transactionDate={transaction.transactionDate}
+        transactionCustomerId={transaction.transactionCustomerId}
+        transactionStatus={transaction.transactionStatus}
+      />
+    );
+  })
+) : (
+  // Handle the case when searchQuery is not empty
+  filteredTransactions.map((transaction) => {
+    return (
+      <TransactionRow
+        key={transaction.id}
+        transactionAmount={transaction.transactionAmount}
+        transactionLocation={transaction.transactionLocation}
+        transactionDate={transaction.transactionDate}
+        transactionCustomerId={transaction.transactionCustomerId}
+        transactionStatus={transaction.transactionStatus}
+      />
+    );
+  })
+)}
       </ThemedView>
     );
   };
