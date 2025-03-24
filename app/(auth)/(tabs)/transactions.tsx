@@ -197,7 +197,7 @@ export default function TransactionScreen() {
             transactionType: transaction.type,
             id: index
           }
-        );
+      });
         setTransactions(currTransactions);
       })
       .catch((error) => {
@@ -378,7 +378,7 @@ export default function TransactionScreen() {
         transaction.transactionCustomerId.toLowerCase().includes(lowercasedQuery) ||
         transaction.transactionDate.toLowerCase().includes(lowercasedQuery) ||
         transaction.transactionAmount.toString().toLowerCase().includes(lowercasedQuery) ||
-        transaction.transactionLocation.toLowerCase().includes(lowercasedQuery) ||
+        transaction.transactionSubtotal.toString().includes(lowercasedQuery) ||
         transaction.transactionType.toLowerCase().includes(lowercasedQuery)
       );
     });
